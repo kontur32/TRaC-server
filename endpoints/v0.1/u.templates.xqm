@@ -1,10 +1,10 @@
-module namespace templates = 'http://iro37.ru/trac/api/v0.1/templates';
+module namespace templates = 'http://iro37.ru/trac/api/v0.1/u/templates';
   
 import module namespace читатьБД = 'http://iro37.ru/trac/core/data/dbRead'
   at '../../core/data/dbRead.xqm';
 
 declare
-  %private
+  %public
   %rest:method( 'GET' )
   %rest:query-param( 'starts', '{ $starts }' )
   %rest:query-param( 'limit', '{ $limit }' )
@@ -24,7 +24,10 @@ function
       читатьБД:шаблоныПользователя( $userID, $s, $l )
       
     return
-      <templates starts = "{ $s }" limit = "{ $l >= count( $result ) ?? count( $result ) !! $l }">{
-        $result
+      <templates
+        starts = "{ $s }"
+        limit = "{ $result?количество }"
+        total = "{ $result?общееКоличество }">{
+        $result?шаблоны
       }</templates>
 };
