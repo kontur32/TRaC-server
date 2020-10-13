@@ -11,6 +11,8 @@ import module namespace трансформация = 'http://iro37.ru/trac/core/
  : @param  $userID ID пользователя
  : @param  $starts начальная запись
  : @param  $limit количество записей в выборке
+ : @param  $query запрос, применяемый к данным пользователя
+ : @param  $params параметры передаваемые в запрос $query
  : @return набор записей данных
  :)
 declare
@@ -19,7 +21,9 @@ function
   читатьБД:данныеПользователя(
     $userID as xs:string, 
     $starts as xs:double, 
-    $limit as xs:double
+    $limit as xs:double,
+    $query as xs:string,
+    $params as map(*)
   )
 {
    let $всеДанныеПользователя :=
@@ -28,8 +32,16 @@ function
       'data'
     )/data/table
     [ @userID = $userID ]
+  
   let $выбранныеДанные :=
-    $всеДанныеПользователя
+    xquery:eval(
+      $query,
+      map{
+        '' : $всеДанныеПользователя,
+        'params' : $params
+      },
+      map{ 'permission' : 'none' }
+    )
       [ position() >= $starts and position() <= $starts + $limit - 1 ]
       
   return

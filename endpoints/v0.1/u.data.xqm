@@ -11,12 +11,14 @@ declare
   %rest:method( 'GET' )
   %rest:query-param( 'starts', '{ $starts }' )
   %rest:query-param( 'limit', '{ $limit }' )
+  %rest:query-param( 'xq', '{ $query }' )
   %rest:query-param( "access_token", "{ $access_token }", "" )
   %rest:path( '/trac/api/v0.1/u/data' )
 function
   templates:get(
     $starts as xs:string*,
     $limit as xs:string*,
+    $query,
     $access_token as xs:string*
   ){
     
@@ -27,12 +29,28 @@ function
       
     let $userID := auth:userID( $authorization )
     
+    let $xq :=
+      if( $query )
+      then(
+        let $q := 
+          if( matches( $query, '^http[s]{0,1}://' ) )
+          then(
+            fetch:text( $query )
+          )
+          else( $query )
+        return
+          if( try{ xquery:parse( $q ) } catch*{ false() } )
+          then( $q )
+          else( '.' )
+      )
+      else( '.' )
+    
     let $s := 
       if( $starts )then( number( $starts ) )else( 1 )
     let $l := 
       if( $limit )then( number( $limit ) )else( 10 )
     let $result := 
-      читатьБД:данныеПользователя( $userID, $s, $l )
+      читатьБД:данныеПользователя( $userID, $s, $l, $xq, map{ 'query' : 'аева' } )
  
     return
       <data
