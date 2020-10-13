@@ -1,7 +1,7 @@
 module namespace templates = 'http://iro37.ru/trac/api/v0.1/p/templates';
 
 import module namespace читатьБД = 'http://iro37.ru/trac/core/data/dbRead'
-  at '../../core/data/dbRead.xqm';
+  at '../../core/data/dbReadTemplates.xqm';
   
 declare
   %private
