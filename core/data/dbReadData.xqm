@@ -38,7 +38,7 @@ function
       $query,
       map{
         '' : $всеДанныеПользователя,
-        'params' : $params
+        $params?имяПеременойПараметров : $params?значенияПараметров
       },
       map{ 'permission' : 'none' }
     )
