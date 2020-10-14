@@ -26,12 +26,17 @@ function
     $params as map(*)
   )
 {
-   let $всеДанныеПользователя :=
-    db:open(
-      $config:params?имяБазыДанных,
-      'data'
-    )/data/table
-    [ @userID = $userID ]
+  let $всеДанныеПользователя :=
+    let $данные :=
+       db:open( $config:params?имяБазыДанных, 'data' )/data/table
+       [ @userID = $userID ]
+       [ if( @status )then( @status = 'active' )else( true() ) ]
+       
+    for $i in $данные
+    let $id := $i/row/@id/data()
+    group by $id
+    return
+     $i[ last() ]
   
   let $выбранныеДанные :=
     xquery:eval(
