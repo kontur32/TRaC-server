@@ -7,14 +7,20 @@ import module namespace auth = "http://iro37.ru/trac/core/permissions/auth"
   at 'auth.xqm';
  
 declare
+  %rest:GET
+  %rest:POST
+  %rest:form-param( "access_token", "{ $access_token_form }", "" )
   %rest:query-param( "access_token", "{ $access_token }", "" ) 
   %perm:check( '/trac/api/v0.1/u/', '{ $perm }' )
-function check:check( $perm, $access_token ) {
+function check:check( $perm, $access_token, $access_token_form ) {
   
   let $authorization := 
-    if ( $access_token != "")
+    if ( $access_token != ""  )
     then( "Bearer " || $access_token )
-    else ( request:header( "Authorization" ) )
+    else ( 
+      if( $access_token_form != ""  )
+      then( "Bearer " || $access_token_form)
+      else( request:header( "Authorization" ) ) )
     
   let $requestUserID := 
     substring-before(
