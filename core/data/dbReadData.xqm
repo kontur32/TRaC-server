@@ -56,3 +56,20 @@ function
       'количество' : count( $выбранныеДанные ) 
    }
 };
+
+
+(:~
+ : Возвращает все записи данных пользователя.
+ : @param  $userID ID пользователя
+ : @return набор записей данных
+ :)
+declare
+  %public
+function
+  читатьБД:всеДанныеПользователя(
+    $userID as xs:string
+  )
+{
+   db:open( $config:params?имяБазыДанных, 'data' )/data/table
+   [ @userID = $userID ]
+};

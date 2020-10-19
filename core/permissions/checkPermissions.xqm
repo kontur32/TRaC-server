@@ -9,6 +9,7 @@ import module namespace auth = "http://iro37.ru/trac/core/permissions/auth"
 declare
   %rest:GET
   %rest:POST
+  %rest:DELETE
   %rest:form-param( "access_token", "{ $access_token_form }", "" )
   %rest:query-param( "access_token", "{ $access_token }", "" ) 
   %perm:check( '/trac/api/v0.1/u/', '{ $perm }' )
