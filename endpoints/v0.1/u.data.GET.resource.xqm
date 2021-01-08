@@ -34,7 +34,13 @@ function
     let $data := 
       читатьБД:всеДанныеПользователя( $userID )
       [ @status = 'active' ]
-    let $store := 
+    
+    return
+       data:yandex( $data, $storeID, $path )
+  };
+  
+declare function data:yandex( $data, $storeID, $path ){
+  let $store := 
       $data
       [ row[ @type = "http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеЯндексДиск" ] ]
       [ row[ ends-with( @id, $storeID ) ] ][ last() ] 
@@ -60,8 +66,7 @@ function
            }
          )
       )[2]/json/file/text()
-      
-    let $response :=
+   let $response :=
       if( $href )  
     then(
       let $rawData := fetch:binary( $href ) 
@@ -89,4 +94,4 @@ function
      
    return
      $response
-  };
+};
