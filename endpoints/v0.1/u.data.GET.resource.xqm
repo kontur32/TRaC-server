@@ -35,16 +35,21 @@ function
       читатьБД:всеДанныеПользователя( $userID )
       [ @status = 'active' ]
     
+    let $store := 
+      $data
+      [ row[ ends-with( @id, $storeID ) ] ][ last() ]
+
     return
-       data:yandex( $data, $storeID, $path )
+      switch ( $store/row/@type/data() )
+      case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеЯндексДиск'
+        return
+          data:yandex( $data, $store, $path )
+      default
+        return
+          <err:RES02>Тип хранилища не зарегистрирован</err:RES02>
   };
   
-declare function data:yandex( $data, $storeID, $path ){
-  let $store := 
-      $data
-      [ row[ @type = "http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеЯндексДиск" ] ]
-      [ row[ ends-with( @id, $storeID ) ] ][ last() ] 
-    
+declare function data:yandex( $data, $store, $path ){    
     let $token := 
       $store/row/cell[ @id = "http://dbx.iro37.ru/zapolnititul/сущности/токенДоступа" ]/text()
     let $storePath :=
