@@ -8,6 +8,9 @@ import module namespace auth = "http://iro37.ru/trac/core/permissions/auth"
 
 import module namespace yandex = 'http://iro37.ru/trac/lib/yandex'
   at '../../lib/yandex.xqm';
+  
+import module namespace nc = 'http://iro37.ru/trac/lib/nextCloud'
+  at '../../lib/nextcloud.xqm';  
 
 (:
   Возвращает ресурс $path из Яндекс-хранилища $storeID 
@@ -47,6 +50,9 @@ function
       case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеЯндексДиск'
         return
           yandex:getResource( $storeRecord, $path )
+      case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеNextcloud'
+        return
+          nc:getResource( $storeRecord, "C:\Users\kontu\Downloads\token.xml", $path )
       default
         return
           <err:RES02>Тип хранилища не зарегистрирован</err:RES02>
