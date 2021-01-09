@@ -1,10 +1,10 @@
 module namespace yandex = 'http://iro37.ru/trac/lib/yandex';
 
-declare function yandex:getResource( $data, $store, $path ){    
+declare function yandex:getResource( $storeRecord, $path ){    
     let $token := 
-      $store/row/cell[ @id = "http://dbx.iro37.ru/zapolnititul/сущности/токенДоступа" ]/text()
+      $storeRecord/row/cell[ @id = "http://dbx.iro37.ru/zapolnititul/сущности/токенДоступа" ]/text()
     let $storePath :=
-      $store/row/cell[ @id = "http://dbx.iro37.ru/zapolnititul/признаки/локальныйПуть" ]/text()
+      $storeRecord/row/cell[ @id = "http://dbx.iro37.ru/zapolnititul/признаки/локальныйПуть" ]/text()
       
     let $fullPath := iri-to-uri( $storePath ) || $path
     let $href :=

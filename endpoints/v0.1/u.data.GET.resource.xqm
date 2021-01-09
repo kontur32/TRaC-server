@@ -38,15 +38,15 @@ function
       читатьБД:всеДанныеПользователя( $userID )
       [ @status = 'active' ]
     
-    let $store := 
+    let $storeRecord := 
       $data
       [ row[ ends-with( @id, $storeID ) ] ][ last() ]
 
     return
-      switch ( $store/row/@type/data() )
+      switch ( $storeRecord/row/@type/data() )
       case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеЯндексДиск'
         return
-          yandex:getResource( $data, $store, $path )
+          yandex:getResource( $storeRecord, $path )
       default
         return
           <err:RES02>Тип хранилища не зарегистрирован</err:RES02>
