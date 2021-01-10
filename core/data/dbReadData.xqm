@@ -45,7 +45,7 @@ function
         '' : $всеДанныеПользователя,
         $params?имяПеременойПараметров : $params?значенияПараметров
       },
-      map{ 'permission' : 'none' }
+      map{ 'permission' : 'admin' }
     )
       [ position() >= $starts and position() <= $starts + $limit - 1 ]
       
