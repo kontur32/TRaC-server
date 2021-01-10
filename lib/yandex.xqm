@@ -24,29 +24,14 @@ declare function yandex:getResource( $storeRecord, $path ){
       )[2]/json/file/text()
    let $response :=
       if( $href )  
-    then(
-      let $rawData := fetch:binary( $href ) 
-      let $request := 
-          <http:request method='POST'>
-              <http:header name="Content-type" value="multipart/form-data; boundary=----7MA4YWxkTrZu0gW"/>
-              <http:multipart media-type = "multipart/form-data" >
-                  <http:header name='Content-Disposition' value='form-data; name="data"'/>
-                  <http:body media-type = "application/octet-stream">
-                     { $rawData }
-                  </http:body>
-              </http:multipart> 
-            </http:request>
-      let $response := 
-          http:send-request(
-              $request,
-              "http://iro37.ru:9984/ooxml/api/v1.1/xlsx/parse/workbook"
-          )
-      return
-       $response[ 2 ]
-     )
-     else(
-       <err:RES01>Ресурс не найден</err:RES01>
-     ) 
+      then(
+        let $rawData := fetch:binary( $href ) 
+        return
+          $rawData
+       )
+       else(
+         <err:RES01>Ресурс не найден</err:RES01>
+       ) 
      
    return
      $response

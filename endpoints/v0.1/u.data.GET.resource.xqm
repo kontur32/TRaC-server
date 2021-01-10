@@ -45,7 +45,7 @@ function
       $data
       [ row[ ends-with( @id, $storeID ) ] ][ last() ]
 
-    return
+    let $rawData :=
       switch ( $storeRecord/row/@type/data() )
       case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеЯндексДиск'
         return
@@ -56,4 +56,30 @@ function
       default
         return
           <err:RES02>Тип хранилища не зарегистрирован</err:RES02>
+     return
+       if( 0 )
+       then( $rawData )
+       else(
+         data:trci( $rawData )
+       )
   };
+  
+declare function data:trci( $rawData ){
+  let $request := 
+          <http:request method='POST'>
+              <http:header name="Content-type" value="multipart/form-data; boundary=----7MA4YWxkTrZu0gW"/>
+              <http:multipart media-type = "multipart/form-data" >
+                  <http:header name='Content-Disposition' value='form-data; name="data"'/>
+                  <http:body media-type = "application/octet-stream">
+                     { $rawData }
+                  </http:body>
+              </http:multipart> 
+            </http:request>
+      let $response := 
+          http:send-request(
+              $request,
+              'http://' || request:hostname() || ':' || request:port() || "/ooxml/api/v1.1/xlsx/parse/workbook"
+          )
+      return
+       $response[ 2 ]
+};
