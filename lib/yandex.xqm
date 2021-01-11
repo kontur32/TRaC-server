@@ -5,8 +5,10 @@ declare function yandex:getResource( $storeRecord, $path ){
       $storeRecord/row/cell[ @id = "http://dbx.iro37.ru/zapolnititul/сущности/токенДоступа" ]/text()
     let $storePath :=
       $storeRecord/row/cell[ @id = "http://dbx.iro37.ru/zapolnititul/признаки/локальныйПуть" ]/text()
-      
-    let $fullPath := iri-to-uri( $storePath ) || $path
+    
+    let $path :=  starts-with( $path, '/' ) ?? $path !! '/' || $path 
+    let $fullPath := $storePath || $path
+    
     let $href :=
       http:send-request(
          <http:request method='GET'>
