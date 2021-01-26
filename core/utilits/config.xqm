@@ -40,3 +40,30 @@ declare
 function config:setting( $parametrName as xs:string ) as xs:string* {
   doc( '../../settings.xml' )//cell[ @id = $parametrName ]/text()
 };
+
+declare function config:log( $fileName, $data, $params ) {
+  switch ( $params?mode )
+  case 'rewrite'
+    return
+      file:write-text(
+           config:param( 'logDir' ) || $fileName,
+            string-join( ( current-dateTime() || '--' || $data, '&#xD;&#xA;' ) )
+         )
+    case 'add'
+    return
+      file:append-text(
+           config:param( 'logDir' ) || $fileName,
+            string-join( ( current-dateTime() || '--' || $data, '&#xD;&#xA;' ) )
+         )
+   default 
+     return
+     file:append-text(
+         config:param( 'logDir' ) || $fileName,
+          string-join( ( current-dateTime() || '--' || $data, '&#xD;&#xA;' ) )
+       )
+       
+};
+
+declare function config:log ( $fileName, $data ) {
+  config:log( $fileName, $data, map{ 'mode' : 'add' } )
+};

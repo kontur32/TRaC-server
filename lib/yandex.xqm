@@ -1,5 +1,8 @@
 module namespace yandex = 'http://iro37.ru/trac/lib/yandex';
 
+import module namespace config = 'http://iro37.ru/trac/core/utilits/config'
+  at '../core/utilits/config.xqm';
+
 declare function yandex:getResource( $storeRecord, $path ){    
     let $token := 
       $storeRecord/row/cell[ @id = "http://dbx.iro37.ru/zapolnititul/сущности/токенДоступа" ]/text()
@@ -24,6 +27,11 @@ declare function yandex:getResource( $storeRecord, $path ){
            }
          )
       )[2]/json/file/text()
+   
+   
+   let $log := 
+      config:log ( "yandex.log", $href, map{ 'mode' : 'rewrite' } )
+   
    let $response :=
       if( $href )  
       then(
