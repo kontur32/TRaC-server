@@ -7,7 +7,7 @@ declare
   %updating
   %rest:POST('{ $data }')
   %rest:path( '/trac/api/v0.1/u/data' )
-function data:get( $data )
+function data:get( $data as document-node() )
 {
   let $db := db:open( $config:params?имяБазыДанных, "data" )/data
   return
