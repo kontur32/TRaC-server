@@ -11,6 +11,10 @@ import module namespace yandex = 'http://iro37.ru/trac/lib/yandex'
   
 import module namespace nc = 'http://iro37.ru/trac/lib/nextCloud'
   at '../../lib/nextcloud.xqm';  
+  
+declare variable 
+  $data:зарезервированныеПараметрsЗапроса := 
+    ( 'access_token', 'xq', 'starts', 'limit' );
 
 (:
   Возвращает ресурс $path из Яндекс-хранилища $storeID 
@@ -21,11 +25,13 @@ declare
   %public
   %rest:method( 'GET' )
   %rest:query-param( 'path', '{ $path }' )
+  %rest:query-param( 'xq', '{ $query }' )
   %rest:query-param( "access_token", "{ $access_token }", "" )
   %rest:path( '/trac/api/v0.1/u/data/stores/{ $storeID }' )
 function
   data:get(
     $path as xs:string*,
+    $query as xs:string*,
     $storeID,
     $access_token as xs:string*
   )
@@ -36,14 +42,12 @@ function
       else ( request:header( "Authorization" ) )
       
     let $userID := auth:userID( $authorization )
-    
-    let $data := 
-      читатьБД:всеДанныеПользователя( $userID )
-      [ @status = 'active' ]
-    
+
     let $storeRecord := 
-      $data
-      [ row[ ends-with( @id, $storeID ) ] ][ last() ]
+      читатьБД:данныеПользователя(
+        $userID, 1, 0,'.',
+        map{ 'имяПеременойПараметров' : 'params', 'значенияПараметров' : map{}  }
+      )?шаблоны[ row[ ends-with( @id, $storeID ) ] ]
 
     let $rawData :=
       switch ( $storeRecord/row/@type/data() )
@@ -56,12 +60,39 @@ function
       default
         return
           <err:RES02>Тип хранилища не зарегистрирован</err:RES02>
+     
+     let $xq :=
+      if( $query )
+      then(
+        let $q := 
+          if( matches( $query, '^http[s]{0,1}://' ) )
+          then(
+            fetch:text( $query )
+          )
+          else( $query )
+        return
+          if( try{ xquery:parse( $q ) } catch*{ false() } )
+          then( $q )
+          else( '.' )
+      )
+      else( '.' )
+    
+    let $params := 
+      map:merge(
+        for $i in request:parameter-names()
+        where not( $i = $data:зарезервированныеПараметрsЗапроса )
+        return map{ $i : request:parameter( $i ) }
+      )
+     
      return
-       if( 0 )
-       then( $rawData )
-       else(
-         data:trci( $rawData )
-       )
+       xquery:eval(
+        $xq,
+        map{
+          '' : data:trci( $rawData ),
+          'params' : $params
+        },
+        map{ 'permission' : 'none' }
+      )
   };
   
 declare function data:trci( $rawData ){
