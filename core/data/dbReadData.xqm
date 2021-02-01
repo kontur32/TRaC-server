@@ -39,15 +39,24 @@ function
      $i[ last() ]
   
   let $выбранныеДанные :=
-    xquery:eval(
-      $query,
-      map{
-        '' : $всеДанныеПользователя,
-        $params?имяПеременойПараметров : $params?значенияПараметров
-      },
-      map{ 'permission' : 'admin' }
-    )
-      [ position() >= $starts and position() <= $starts + $limit - 1 ]
+    let $result := 
+       xquery:eval(
+        $query,
+        map{
+          '' : $всеДанныеПользователя,
+          $params?имяПеременойПараметров : $params?значенияПараметров
+        },
+        map{ 'permission' : 'admin' }
+      )
+    return
+       if( $limit = 0 )
+       then( 
+         $result
+       )
+       else(
+         $result
+         [ position() >= $starts and position() <= $starts + $limit - 1 ]
+       )
       
   return
     map{
