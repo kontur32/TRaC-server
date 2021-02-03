@@ -7,11 +7,12 @@ declare
   %updating
   %rest:POST('{ $data }')
   %rest:path( '/trac/api/v0.1/u/data' )
-function data:get( $data as document-node() )
+function data:get( $data )
 {
   let $db := db:open( $config:params?имяБазыДанных, "data" )/data
+  let $isValid := data:validate( $data )
   return
-    if( $data/child::* instance of element( table ) )
+    if( $isValid  )
     then(
       insert node $data into $db
     )
@@ -19,4 +20,12 @@ function data:get( $data as document-node() )
       update:output( <err:ERR06>Не верный формат данных</err:ERR06> )
     )
       
+};
+
+declare function data:validate( $data ){
+  try{
+      $data/child::* instance of element( table )
+  }catch*{
+      false()
+  }
 };
