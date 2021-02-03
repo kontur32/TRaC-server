@@ -11,5 +11,12 @@ function data:get( $data as document-node() )
 {
   let $db := db:open( $config:params?имяБазыДанных, "data" )/data
   return
+    if( $data/child::* instance of element( table ) )
+    then(
       insert node $data into $db
+    )
+    else(
+      update:output( <err:ERR06>Не верный формат данных</err:ERR06> )
+    )
+      
 };
