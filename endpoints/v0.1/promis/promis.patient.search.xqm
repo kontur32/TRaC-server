@@ -9,6 +9,45 @@ declare
   %rest:path('/trac/api/v0.1/p/data/{ $userID }/search.patient')
   %output:method('json')
 function search:main ( $userID, $term ){
+  search:getData( $userID, $term )
+};
+
+declare function search:getData( $userID, $term ){
+  let $data :=
+    db:attribute( 'titul24', 'https://schema.org/familyName', 'id' )
+    /parent::*[ matches( lower-case( . ), lower-case( $term ) ) ]
+    /parent::*[ @type="https://schema.org/Patient"]
+    /parent::*[ @status = "active" and @userID = $userID ]
+
+  let $res := 
+    for $ii in $data
+    let $a := $ii/@id
+    group by $a
+    let $i := $ii[ last() ]
+    return
+      let $birthDate := 
+       replace(
+         $i/row/cell[@id='https://schema.org/birthDate'],
+         '(\d{4})-(\d{2})-(\d{2})',
+         '$3.$2.$1'
+       )
+       
+     return
+       <_ type="object">
+         <label>{
+             $i/row/cell[@id='https://schema.org/familyName'] || ' ' ||
+             $i/row/cell[@id='https://schema.org/givenName'] || ' ' ||
+             $i/row/cell[@id='https://schema.org/additionalName'] || ' ' ||
+             $birthDate
+           }</label>
+         <id>{ $i/row/substring-after( @id/data(), '#' ) }</id>
+       </_ >
+       
+  return
+    <json type="array">{ $res }</json>
+};
+
+declare function search:getData2( $userID, $term ){
   let $data := 
     читатьБД:данныеПользователя(
     $userID, 1, 0, ".",
