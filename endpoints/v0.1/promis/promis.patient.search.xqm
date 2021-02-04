@@ -21,7 +21,7 @@ declare function search:getData( $userID, $term ){
 
   let $ii := 
     for $i in $data
-    let $a := $i/@id
+    let $a := $i/row/@id
     group by $a
     return 
       $i[ last() ]
