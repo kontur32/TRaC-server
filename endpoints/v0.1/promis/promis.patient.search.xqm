@@ -19,19 +19,21 @@ declare function search:getData( $userID, $term ){
     /parent::*[ @type="https://schema.org/Patient"]
     /parent::*[ @status = "active" and @userID = $userID ]
 
-  let $res := 
-    for $ii in $data
-    let $a := $ii/@id
+  let $ii := 
+    for $i in $data
+    let $a := $i/@id
     group by $a
-    let $i := $ii[ last() ]
-    return
+    return 
+      $i[ last() ]
+  
+  let $res :=
+    for $i in $ii[ position() <= 10 ]
       let $birthDate := 
        replace(
          $i/row/cell[@id='https://schema.org/birthDate'],
          '(\d{4})-(\d{2})-(\d{2})',
          '$3.$2.$1'
        )
-       
      return
        <_ type="object">
          <label>{
