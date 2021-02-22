@@ -27,7 +27,7 @@ declare function search:getData( $userID, $term ){
       $i[ last() ]
   
   let $res :=
-    for $i in $ii[ position() <= 10 ]
+    for $i in $ii[ position() ]
       let $birthDate := 
        replace(
          $i/row/cell[@id='https://schema.org/birthDate'],
