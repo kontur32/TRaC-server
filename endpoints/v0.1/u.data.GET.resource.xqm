@@ -1,5 +1,8 @@
 module namespace data = 'http://iro37.ru/trac/api/v0.1/u/data';
-  
+
+import module namespace config = 'http://iro37.ru/trac/core/utilits/config' 
+  at '../../core/utilits/config.xqm';
+
 import module namespace читатьБД = 'http://iro37.ru/trac/core/data/dbRead.Data'
   at '../../core/data/dbReadData.xqm';
   
@@ -56,7 +59,7 @@ function
           yandex:getResource( $storeRecord, $path )
       case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеNextcloud'
         return
-          nc:getResource( $storeRecord, "C:\Users\kontu\Downloads\token.xml", $path )
+          nc:getResource( $storeRecord,  $config:params?tokenRecordsFilePath, $path )
       default
         return
           <err:RES02>Тип хранилища не зарегистрирован</err:RES02>
