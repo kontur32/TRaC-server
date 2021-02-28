@@ -67,6 +67,25 @@ function
 };
 
 
+declare
+  %public
+function
+  читатьБД:данныеПользователя(
+    $userID as xs:string, 
+    $starts as xs:double, 
+    $limit as xs:double,
+    $query as xs:string
+  )
+{
+  читатьБД:данныеПользователя(
+    $userID , 
+    $starts , 
+    $limit ,
+    $query ,
+    map{ 'имяПеременойПараметров' : 'params', 'params' : map{}}
+  )
+};
+
 (:~
  : Возвращает все записи данных пользователя.
  : @param  $userID ID пользователя

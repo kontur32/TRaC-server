@@ -42,7 +42,7 @@ function
       else ( request:header( "Authorization" ) )
       
     let $userID := auth:userID( $authorization )
-
+   
     let $storeRecord := 
       читатьБД:данныеПользователя(
         $userID, 1, 0,'.',
