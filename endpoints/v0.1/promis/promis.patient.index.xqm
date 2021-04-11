@@ -11,7 +11,7 @@ declare
   %rest:path('/trac/api/v0.1/p/data/{ $userID }/index.patient')
 function index:main ( $userID ){
   let $data :=
-    читатьБД:всеДанныеПользователя( $userID )
+    читатьБД:данныеПользователя( $userID, 1, 0, '.' )?шаблоны
   
   let $записиОПриеме := $data[ @templateID = 'c1d33e2e-0f07-41bc-ab93-a6dc1fd51ee6' ]
   let $всеПациенты := $data[ @templateID = 'ad52a99b-2153-4a3f-8327-b23810fb38e4' ]
@@ -23,14 +23,15 @@ function index:main ( $userID ){
       for $i in $всеПациенты[ row[ not( @id/data() = $идентификаторыПациентовПоПоследнейЗаписи ) ] ]
       where xs:dateTime( $i/@updated/data() ) instance of xs:dateTime
       return 
-        [ $i/row/@id/data(), $i/@updated/data() ]
+        [ $i/row/@id/data(), substring-before( $i/@updated/data(), '+' ) ]
   
   let $идентификаторыПациентовОтсортированные :=
       for $i in ( $идентификаторыПациентовБезЗаписей, $идентификаторыПациентовПоПоследнейЗаписи )
+      where starts-with( $i?1, 'http://dbx.iro37.ru/promis/сущности/пациенты#' )
       let $dateTime := xs:dateTime( $i?2 )
       order by $dateTime
       return
-        $i?1
+        $i
   
   let $индекс := 
     <table>
@@ -39,7 +40,7 @@ function index:main ( $userID ){
           for $i in $идентификаторыПациентовОтсортированные
           count $c
           return
-            <cell id = "{ $i }">{ $c }</cell>
+            <cell id = "{ $i?1 }" dateTime = '{ $i?2 }'>{ $c }</cell>
         }
       </row>
     </table>
@@ -82,7 +83,7 @@ function index:датаВремяЗаписи( $var )
   let $d :=  
     $var/cell[@id="https://schema.org/Date"]/text()
   let $t :=  
-      $var/cell[ @id="https://schema.org/Time" ]/text() || ":00.000" 
+      $var/cell[ @id="https://schema.org/Time" ]/text() || ":00.001" 
   return
     try{ xs:dateTime( $d || 'T' || $t ) }catch*{ xs:dateTime( '2000-12-31T23:59:59.999' ) }
 };
