@@ -97,6 +97,49 @@ function
         map{ 'permission' : 'none' }
       )
   };
+
+declare
+  %public
+  %rest:method( 'GET' )
+  %rest:query-param( 'path', '{ $path }' )
+  %rest:query-param( 'xq', '{ $query }' )
+  %rest:path( '/trac/api/v0.1/u/data/stores/{ $storeID }/file' )
+function
+  data:getFileRaw(
+    $path as xs:string*,
+    $query as xs:string*,
+    $storeID
+  )
+  {
+    let $storeRecord := 
+      читатьБД:данныеПользователя(
+        session:get( 'userID' ), 1, 0,'.',
+        map{ 'имяПеременойПараметров' : 'params', 'значенияПараметров' : map{}  }
+      )?шаблоны[ row[ ends-with( @id, $storeID ) ] ]
+
+    let $rawData := data:getFileRaw( $storeRecord, $path )
+    return
+      $rawData
+  };
+
+
+(:
+  возвращает файл в формате base64
+:)
+declare function data:getFileRaw(  $storeRecord as element( table ), $path as xs:string* )
+  as xs:base64Binary
+{
+  switch ( $storeRecord/row/@type/data() )
+  case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеЯндексДиск'
+    return
+      yandex:getResource( $storeRecord, $path )
+  case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеNextcloud'
+    return
+      nc:getResource( $storeRecord,  $config:params?tokenRecordsFilePath, $path )
+  default
+    return
+      <err:RES02>Тип хранилища не зарегистрирован</err:RES02>
+};
   
 declare function data:trci( $rawData ){
   let $request := 
