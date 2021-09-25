@@ -35,7 +35,7 @@ function check:check( $perm, $access_token, $access_token_form ) {
       let $tokenUserID := auth:userID( $authorization )
       return
         if( $tokenUserID )
-        then( ) (: разрешает обращение :)
+        then( session:set( 'userID', $tokenUserID )) (: разрешает обращение :)
         else(
           <rest:response>
             <http:response status="403" message="Forbidden"/>

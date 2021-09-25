@@ -33,6 +33,4 @@ function data:get( $id, $instance, $access_token )
         replace value of node  $i/@status with 'delete',
         update:output( <result>{ count( $node ) }</result> )
     )
-    
-    
 };
