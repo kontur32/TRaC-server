@@ -33,7 +33,7 @@ function
        [ if( @status )then( @status = 'active' )else( true() ) ]
        
     for $i in $данные
-    let $id := $i/row/@id/data()
+    let $id := $i/@id/data()
     group by $id
     return
      $i[ last() ]
