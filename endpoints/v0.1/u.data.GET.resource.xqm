@@ -1,4 +1,4 @@
-module namespace data = 'http://iro37.ru/trac/api/v0.1/u/data';
+module namespace data = 'http://iro37.ru/trac/api/v0.1/u/data/stores';
 
 import module namespace config = 'http://iro37.ru/trac/core/utilits/config' 
   at '../../core/utilits/config.xqm';
@@ -39,25 +39,59 @@ function
     $access_token as xs:string*
   )
   {
-    let $storeRecord := 
+    let $данныеПользователя :=
       читатьБД:данныеПользователя(
         session:get( 'userID' ), 1, 0,'.',
         map{ 'имяПеременойПараметров' : 'params', 'значенияПараметров' : map{}  }
-      )?шаблоны[ row[ ends-with( @id, $storeID ) ] ]
+      )?шаблоны
+    
+    let $storeRecord := 
+      $данныеПользователя[ row[ ends-with( @id, $storeID ) ] ]
+    
     let $f :=
-      function( $p ){ data:getData( $p?storeRecord, $p?path, $p?query ) }
+      function( $p ){ data:xlsx-to-trci( $p?storeRecord, $p?path, $p?query ) }
+    
     return
       if( request:parameter( 'nocache' ) )
-      then(
-        data:getData( $storeRecord, $path, $query )
-      )
+      then( data:xlsx-to-trci( $storeRecord, $path, $query ) )
       else(
         let $uri :=
           request:uri() || $path || $query ||  session:get( 'userID' )
         return
-          data:getResource( $uri, $f, map{ 'storeRecord' : $storeRecord, 'path' : $path, 'query' : $query } )
+          data:getResource(
+            $uri, $f, map{ 'storeRecord' : $storeRecord, 'path' : $path, 'query' : $query }
+          )
       )
   };
+
+declare function data:getResource( $uri, $funct, $params ){
+  let $hash :=  xs:string( xs:hexBinary( hash:md5( $uri ) ) )
+  let $resPath := config:param( 'cache.dir' ) || $hash
+  let $isCached :=
+       if( file:exists( $resPath ) )
+       then(
+          minutes-from-duration(
+           current-dateTime() - file:last-modified( $resPath )
+         ) < 5
+       )
+       else( false() )
+
+  let $cache := 
+    if( $isCached  )
+    then( try{ doc( $resPath ) }catch*{} )
+    else( false() )
+   
+  return
+    if( $cache )
+    then( $cache )
+    else(
+      let $res3 := try{ $funct( $params ) }catch*{}
+      let $w := file:write( config:param( 'cache.dir' ) || $hash, $res3 )
+      return
+         $res3
+    )
+};
+
 
 declare
   %public
@@ -81,34 +115,7 @@ function
        data:getFileRaw( $storeRecord, $path ) 
   };
 
-declare function data:getResource( $uri, $funct, $params ){
-  let $hash :=  xs:string( xs:hexBinary( hash:md5( $uri ) ) )
-  let $resPath := config:param( 'cache.dir' ) || $hash
-  let $mod :=
-    function( $resPath ){
-      minutes-from-duration( current-dateTime() - file:last-modified( $resPath ) )
-    }
-  
-  let $cache := 
-    if( file:exists( $resPath ) )
-    then(
-        if( $mod( $resPath ) < 5 )
-        then(
-          try{ doc( $resPath  )/child::* update insert node attribute {'modified'}{ $mod( $resPath ) } into . }catch*{}
-        )
-        else()  
-    )
-    else()
-  return
-    if( $cache )
-    then( $cache )
-    else(
-      let $res3 := try{ $funct( $params ) }catch*{}
-      let $w := file:write( config:param( 'cache.dir' ) || $hash, $res3 )
-      return
-         $res3
-    )
-};
+
 
 (:
   возвращает файл в формате base64
@@ -151,25 +158,14 @@ declare function data:trci( $rawData ){
 (: возвращает данные, запрошенные пользователем из базы :)
 
 declare
-  %private
-function data:getData(
+  %public
+function data:xlsx-to-trci(
   $storeRecord as element( table ),
   $path as xs:string,
   $query as xs:string
 ){
-      let $rawData :=
-      switch ( $storeRecord/row/@type/data() )
-      case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеЯндексДиск'
-        return
-          yandex:getResource( $storeRecord, $path )
-      case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеNextcloud'
-        return
-          nc:getResource( $storeRecord,  $config:params?tokenRecordsFilePath, $path )
-      default
-        return
-          <err:RES02>Тип хранилища не зарегистрирован</err:RES02>
-     
-     let $xq :=
+  let $rawData := data:getFileRaw(  $storeRecord, $path )
+  let $xq :=
         let $q := 
           if( matches( $query, '^http[s]{0,1}://' ) )
           then( fetch:text( $query ) )
@@ -185,11 +181,10 @@ function data:getData(
         where not( $i = $data:зарезервированныеПараметрsЗапроса )
         return map{ $i : request:parameter( $i ) }
       )
-     
      return
        xquery:eval(
         $xq,
-        map{ '' : data:trci( $rawData ),  'params' : $params  },
+        map{ '' : data:trci( $rawData ),  'params' : $params },
         map{ 'permission' : 'none' }
       )
 };
