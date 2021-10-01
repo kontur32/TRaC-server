@@ -52,7 +52,10 @@ function
         data:getData( $storeRecord, $path, $query )
       )
       else(
-        data:getResource( request:uri(), $f, map{ 'storeRecord' : $storeRecord, 'path' : $path, 'query' : $query } )
+        let $uri :=
+          request:uri() || $path || $query ||  session:get( 'userID' )
+        return
+          data:getResource( $uri, $f, map{ 'storeRecord' : $storeRecord, 'path' : $path, 'query' : $query } )
       )
   };
 
@@ -91,7 +94,7 @@ declare function data:getResource( $uri, $funct, $params ){
     then(
         if( $mod( $resPath ) < 5 )
         then(
-          try{ doc( $resPath  )/child::* update insert node attribute {'m'}{ $mod( $resPath ) } into . }catch*{}
+          try{ doc( $resPath  )/child::* update insert node attribute {'iri'}{ $uri } into . }catch*{}
         )
         else()  
     )
