@@ -94,7 +94,7 @@ declare function data:getResource( $uri, $funct, $params ){
     then(
         if( $mod( $resPath ) < 5 )
         then(
-          try{ doc( $resPath  )/child::* update insert node attribute {'iri'}{ $uri } into . }catch*{}
+          try{ doc( $resPath  )/child::* update insert node attribute {'modified'}{ $mod( $resPath ) } into . }catch*{}
         )
         else()  
     )
