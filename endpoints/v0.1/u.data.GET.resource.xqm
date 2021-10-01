@@ -28,7 +28,7 @@ declare
   %public
   %rest:method( 'GET' )
   %rest:query-param( 'path', '{ $path }' )
-  %rest:query-param( 'xq', '{ $query }' )
+  %rest:query-param( 'xq', '{ $query }', '.' )
   %rest:query-param( "access_token", "{ $access_token }", "" )
   %rest:path( '/trac/api/v0.1/u/data/stores/{ $storeID }' )
 function
@@ -39,62 +39,20 @@ function
     $access_token as xs:string*
   )
   {
-    let $authorization := 
-      if ( $access_token != "")
-      then( "Bearer " || $access_token )
-      else ( request:header( "Authorization" ) )
-      
-    let $userID := auth:userID( $authorization )
-   
     let $storeRecord := 
       читатьБД:данныеПользователя(
-        $userID, 1, 0,'.',
+        session:get( 'userID' ), 1, 0,'.',
         map{ 'имяПеременойПараметров' : 'params', 'значенияПараметров' : map{}  }
       )?шаблоны[ row[ ends-with( @id, $storeID ) ] ]
-
-    let $rawData :=
-      switch ( $storeRecord/row/@type/data() )
-      case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеЯндексДиск'
-        return
-          yandex:getResource( $storeRecord, $path )
-      case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеNextcloud'
-        return
-          nc:getResource( $storeRecord,  $config:params?tokenRecordsFilePath, $path )
-      default
-        return
-          <err:RES02>Тип хранилища не зарегистрирован</err:RES02>
-     
-     let $xq :=
-      if( $query )
+    let $f :=
+      function( $p ){ data:getData( $p?storeRecord, $p?path, $p?query ) }
+    return
+      if( request:parameter( 'nocache' ) )
       then(
-        let $q := 
-          if( matches( $query, '^http[s]{0,1}://' ) )
-          then(
-            fetch:text( $query )
-          )
-          else( $query )
-        return
-          if( try{ xquery:parse( $q ) } catch*{ false() } )
-          then( $q )
-          else( '.' )
+        data:getData( $storeRecord, $path, $query )
       )
-      else( '.' )
-    
-    let $params := 
-      map:merge(
-        for $i in request:parameter-names()
-        where not( $i = $data:зарезервированныеПараметрsЗапроса )
-        return map{ $i : request:parameter( $i ) }
-      )
-     
-     return
-       xquery:eval(
-        $xq,
-        map{
-          '' : data:trci( $rawData ),
-          'params' : $params
-        },
-        map{ 'permission' : 'none' }
+      else(
+        data:getResource( request:uri(), $f, map{ 'storeRecord' : $storeRecord, 'path' : $path, 'query' : $query } )
       )
   };
 
@@ -116,12 +74,38 @@ function
         session:get( 'userID' ), 1, 0,'.',
         map{ 'имяПеременойПараметров' : 'params', 'значенияПараметров' : map{}  }
       )?шаблоны[ row[ ends-with( @id, $storeID ) ] ]
-
-    let $rawData := data:getFileRaw( $storeRecord, $path )
     return
-      $rawData
+       data:getFileRaw( $storeRecord, $path ) 
   };
 
+declare function data:getResource( $uri, $funct, $params ){
+  let $hash :=  xs:string( xs:hexBinary( hash:md5( $uri ) ) )
+  let $resPath := config:param( 'cache.dir' ) || $hash
+  let $mod :=
+    function( $resPath ){
+      minutes-from-duration( current-dateTime() - file:last-modified( $resPath ) )
+    }
+  
+  let $cache := 
+    if( file:exists( $resPath ) )
+    then(
+        if( $mod( $resPath ) < 5 )
+        then(
+          try{ doc( $resPath  )/child::* update insert node attribute {'m'}{ $mod( $resPath ) } into . }catch*{}
+        )
+        else()  
+    )
+    else()
+  return
+    if( $cache )
+    then( $cache )
+    else(
+      let $res3 := try{ $funct( $params ) }catch*{}
+      let $w := file:write( config:param( 'cache.dir' ) || $hash, $res3 )
+      return
+         $res3
+    )
+};
 
 (:
   возвращает файл в формате base64
@@ -159,4 +143,50 @@ declare function data:trci( $rawData ){
           )
       return
        $response[ 2 ]
+};
+
+(: возвращает данные, запрошенные пользователем из базы :)
+
+declare
+  %private
+function data:getData(
+  $storeRecord as element( table ),
+  $path as xs:string,
+  $query as xs:string
+){
+      let $rawData :=
+      switch ( $storeRecord/row/@type/data() )
+      case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеЯндексДиск'
+        return
+          yandex:getResource( $storeRecord, $path )
+      case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеNextcloud'
+        return
+          nc:getResource( $storeRecord,  $config:params?tokenRecordsFilePath, $path )
+      default
+        return
+          <err:RES02>Тип хранилища не зарегистрирован</err:RES02>
+     
+     let $xq :=
+        let $q := 
+          if( matches( $query, '^http[s]{0,1}://' ) )
+          then( fetch:text( $query ) )
+          else( $query )
+        return
+          if( try{ xquery:parse( $q ) } catch*{ false() } )
+          then( $q )
+          else( '.' )
+    
+    let $params := 
+      map:merge(
+        for $i in request:parameter-names()
+        where not( $i = $data:зарезервированныеПараметрsЗапроса )
+        return map{ $i : request:parameter( $i ) }
+      )
+     
+     return
+       xquery:eval(
+        $xq,
+        map{ '' : data:trci( $rawData ),  'params' : $params  },
+        map{ 'permission' : 'none' }
+      )
 };
