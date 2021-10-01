@@ -2,9 +2,9 @@ module namespace data = 'http://iro37.ru/trac/api/v0.1/u/data';
   
 import module namespace читатьБД = 'http://iro37.ru/trac/core/data/dbRead.Data'
   at '../../core/data/dbReadData.xqm';
-  
-import module namespace auth = "http://iro37.ru/trac/core/permissions/auth"
-  at '../../core/permissions/auth.xqm';
+
+import module namespace store = 'http://iro37.ru/trac/api/v0.1/u/data/stores'
+  at 'u.data.GET.resource.xqm';
 
 declare variable 
   $data:зарезервированныеПараметрsЗапроса := 
@@ -25,40 +25,34 @@ function
     $query,
     $access_token as xs:string*
   ){
-    
-    let $authorization := 
-      if ( $access_token != "")
-      then( "Bearer " || $access_token )
-      else ( request:header( "Authorization" ) )
-      
-    let $userID := auth:userID( $authorization )
-    
+    let $userID := session:get( 'userID' )
     let $xq :=
       if( $query )
       then(
         let $q := 
           if( matches( $query, '^http[s]{0,1}://' ) )
-          then(
-            fetch:text( $query )
-          )
+          then( fetch:text( $query ) )
           else( $query )
         return
           if( try{ xquery:parse( $q ) } catch*{ false() } )
           then( $q )
-          else( '.' )
+          else( '()' )
       )
       else( '.' )
     
-    let $s := 
-      if( $starts )then( number( $starts ) )else( 1 )
-    let $l := 
-      if( $limit )then( number( $limit ) )else( 10 )
+    let $s := if( $starts )then( number( $starts ) )else( 1 )
+    let $l := if( $limit )then( number( $limit ) )else( 10 )
     
     let $params := 
       map:merge(
-        for $i in request:parameter-names()
-        where not( $i = $data:зарезервированныеПараметрsЗапроса )
-        return map{ $i : request:parameter( $i ) }
+        (
+          for $i in request:parameter-names()
+          where not( $i = $data:зарезервированныеПараметрsЗапроса )
+          return map{ $i : request:parameter( $i ) },
+          map{
+            '_api' : map{ 'getTrci' : function( $s, $p, $q ){ store:xlsx-to-trci( $s, $p, $q ) } }
+          }
+        )
       )
     
     let $result := 
@@ -71,7 +65,7 @@ function
       <data
         starts = "{ $s }"
         limit = "{ $result?количество }"
-        total = "{ $result?общееКоличество }"
+        total = "{ count( $result?шаблоны ) }"
         userID = "{ $userID }">{
         $result?шаблоны
       }</data>
