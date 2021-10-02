@@ -64,7 +64,7 @@ function
     return
       <data
         starts = "{ $s }"
-        limit = "{ $result?количество }"
+        limit = "{ $l }"
         total = "{ count( $result?шаблоны ) }"
         userID = "{ $userID }">{
         $result?шаблоны
