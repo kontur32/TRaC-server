@@ -52,3 +52,25 @@ function check:check( $perm, $access_token, $access_token_form ) {
       <err:AUTH01>Ошибка: запрос без авторизации</err:AUTH01>
     )
 };
+
+declare
+  %rest:GET
+  %perm:check( '/trac/api/v0.1/u/data', '{ $perm }' )
+function check:getData( $perm ){
+  let $params := 
+    string-join(
+        for $i in request:parameter-names()
+        where not( $i = 'access_token' )
+        return $i || request:parameter( $i ) 
+      )
+  let $uri := session:get( 'userID' ) || $params || request:uri()
+  let $hash :=  xs:string( xs:hexBinary( hash:md5( $uri ) ) )
+  let $resPath := config:param( 'cache.dir' ) || $hash
+  where file:exists( $resPath )
+  where 
+    minutes-from-duration(
+     current-dateTime() - file:last-modified( $resPath )
+   ) < 5
+  return
+     doc( $resPath ) update insert node attribute {'mod'}{file:last-modified( $resPath )} into ./child::*
+};

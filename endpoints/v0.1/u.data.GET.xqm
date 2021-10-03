@@ -1,5 +1,8 @@
 module namespace data = 'http://iro37.ru/trac/api/v0.1/u/data';
-  
+
+import module namespace config = 'http://iro37.ru/trac/core/utilits/config' 
+  at '../../core/utilits/config.xqm';
+    
 import module namespace читатьБД = 'http://iro37.ru/trac/core/data/dbRead.Data'
   at '../../core/data/dbReadData.xqm';
 
@@ -55,18 +58,34 @@ function
         )
       )
     
-    let $result := 
+    let $data := 
       читатьБД:данныеПользователя(
         $userID, $s, $l, $xq, 
         map{ 'имяПеременойПараметров' : 'params', 'значенияПараметров' : $params }
       )
  
-    return
+    let $result :=
       <data
         starts = "{ $s }"
         limit = "{ $l }"
-        total = "{ count( $result?шаблоны ) }"
+        total = "{ count( $data?шаблоны ) }"
         userID = "{ $userID }">{
-        $result?шаблоны
+        $data?шаблоны
       }</data>
+    
+    let $params := 
+      string-join(
+          for $i in request:parameter-names()
+          where not( $i = 'access_token' )
+          return $i || request:parameter( $i ) 
+        )
+    let $uri := session:get( 'userID' ) || $params || request:uri()
+    let $hash :=  xs:string( xs:hexBinary( hash:md5( $uri ) ) )
+    let $resPath := config:param( 'cache.dir' ) || $hash
+    
+    return
+      (
+        file:write( config:param( 'cache.dir' ) || $hash, $result ),
+        $result
+      )
 };
