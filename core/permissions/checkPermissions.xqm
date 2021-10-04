@@ -60,17 +60,18 @@ function check:getData( $perm ){
   let $params := 
     string-join(
         for $i in request:parameter-names()
-        where not( $i = 'access_token' )
+        where not( $i = ( 'access_token', 'cache' ) )
         return $i || request:parameter( $i ) 
       )
   let $uri := session:get( 'userID' ) || $params || request:uri()
   let $hash :=  xs:string( xs:hexBinary( hash:md5( $uri ) ) )
   let $resPath := config:param( 'cache.dir' ) || $hash
+  where  request:parameter( 'cache' )
   where file:exists( $resPath )
   where 
-    minutes-from-duration(
+    (
      current-dateTime() - file:last-modified( $resPath )
-   ) < 5
+   ) div xs:dayTimeDuration('PT1S') < xs:integer( request:parameter( 'cache' ) )
   return
      doc( $resPath ) update insert node attribute {'mod'}{file:last-modified( $resPath )} into ./child::*
 };

@@ -76,7 +76,7 @@ function
     let $params := 
       string-join(
           for $i in request:parameter-names()
-          where not( $i = 'access_token' )
+          where not( $i = ( 'access_token', 'cache' ) )
           return $i || request:parameter( $i ) 
         )
     let $uri := session:get( 'userID' ) || $params || request:uri()
