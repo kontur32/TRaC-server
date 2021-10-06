@@ -53,10 +53,19 @@ function check:check( $perm, $access_token, $access_token_form ) {
     )
 };
 
+(: кэширование ответов :)
+
 declare
   %rest:GET
-  %perm:check( '/trac/api/v0.1/u/data', '{ $perm }' )
-function check:getData( $perm ){
+  %perm:check( '/trac/api/v0.1/u/forms' )
+function check:getForms(){
+  check:getData()
+};
+
+declare
+  %rest:GET
+  %perm:check( '/trac/api/v0.1/u/data' )
+function check:getData(){
   let $params := 
     string-join(
         for $i in request:parameter-names()
