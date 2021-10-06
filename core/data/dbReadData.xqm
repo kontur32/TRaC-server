@@ -28,9 +28,8 @@ function
 {
   let $всеДанныеПользователя :=
     let $данные :=
-       db:open( $config:params?имяБазыДанных, 'data' )/data/table
-       [ @userID = $userID ]
-       [ if( @status )then( @status = 'active' )else( true() ) ]
+      читатьБД:всеДанныеПользователя( $userID )
+      [ if( @status )then( @status = 'active' )else( true() ) ]
        
     for $i in $данные
     let $id := $i/@id/data()
