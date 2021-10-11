@@ -1,0 +1,43 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xs:element name="table">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="row" maxOccurs="unbounded" minOccurs="0"/>
+      </xs:sequence>
+      <xs:attribute name="aboutType" use="required" type="xs:anyURI"/>
+      <xs:attribute name="id" use="required" type="xs:anyURI"/>
+      <xs:attribute name="label" use="optional" type="xs:string"/>
+      <xs:attribute name="modelURL" use="required" type="xs:anyURI"/>
+      <xs:attribute name="status" use="required" type="status"/>
+      <xs:attribute name="templateID" use="required" type="xs:anyURI"/>
+      <xs:attribute name="updated" use="required" type="xs:dateTime"/>
+      <xs:attribute name="userID" use="required" type="xs:positiveInteger"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="row">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" minOccurs="0" ref="cell"/>
+      </xs:sequence>
+      <xs:attribute name="id" use="required" type="xs:anyURI"/>
+      <xs:attribute name="type" use="optional" type="xs:anyURI"/>
+	  <xs:attribute name="aboutType" use="optional" type="xs:anyURI"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="cell">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="xs:string">
+          <xs:attribute name="id" use="required" type="xs:anyURI"/>
+		  <xs:attribute name="label" use="optional" type="xs:anyURI"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:simpleType name = "status">
+    <xs:restriction base = "xs:string">
+      <xs:enumeration value = "active"/>
+      <xs:enumeration value = "delete"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>

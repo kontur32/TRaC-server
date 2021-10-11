@@ -27,11 +27,7 @@ declare function yandex:getResource( $storeRecord, $path ){
            }
          )
       )[2]/json/file/text()
-   
-   
-   let $log := 
-      config:log ( "yandex.log", $href, map{ 'mode' : 'rewrite' } )
-   
+
    let $response :=
       if( $href )  
       then(

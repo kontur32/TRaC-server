@@ -45,7 +45,7 @@ function index:main ( $userID ){
       </row>
     </table>
     let $путьХранилища :=
-      Q{org.basex.util.Prop}HOMEDIR() || 'webapp/TRaC-server/store/' || $userID
+      Q{org.basex.util.Prop}HOMEDIR() || 'webapp/TRaC-server/var/store/' || $userID
     return
       (
         file:write(  $путьХранилища ||'/index.patient.xml', $индекс ),

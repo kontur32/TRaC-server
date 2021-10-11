@@ -12,20 +12,17 @@ function data:get( $data )
   let $db := db:open( $config:params?имяБазыДанных, "data" )/data
   let $isValid := data:validate( $data )
   return
-    if( $isValid  )
+    if( $isValid/status/text() = "valid"  )
     then(
       insert node $data into $db
     )
     else(
-      update:output( <err:ERR06>Не верный формат данных</err:ERR06> )
+      update:output( <err:ERR06><message>Не верный формат данных</message>{ $isValid }</err:ERR06> )
     )
-      
 };
 
 declare function data:validate( $data ){
-  try{
-      $data/child::* instance of element( table )
-  }catch*{
-      false()
-  }
+  let $schema := config:param( "dataStore" ) ||  "xsd/trci.xsd"
+  return
+    validate:xsd-report( $data, $schema )
 };
