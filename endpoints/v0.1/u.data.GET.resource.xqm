@@ -14,10 +14,39 @@ import module namespace yandex = 'http://iro37.ru/trac/lib/yandex'
   
 import module namespace nc = 'http://iro37.ru/trac/lib/nextCloud'
   at '../../lib/nextcloud.xqm';  
+
+import module namespace sch = "http://iro37.ru/trac/api/v0.1/u/data/stores/modelRDF"
+  at 'lib/modelRDF.xqm';
+import module namespace rdf = "http://iro37.ru/trac/api/v0.1/u/data/stores/trciToRDF"
+  at 'lib/trciToRDF.xqm';
   
 declare variable 
   $data:зарезервированныеПараметрsЗапроса := 
     ( 'access_token', 'xq', 'starts', 'limit' );
+
+
+declare
+  %public
+  %rest:method( 'GET' )
+  %rest:query-param( 'path', '{ $path }' )
+  %rest:query-param( 'xq', '{ $query }', '.' )
+  %rest:query-param( 'schema', '{ $schema }', '' )
+  %rest:query-param( "access_token", "{ $access_token }", "" )
+  %rest:path( '/trac/api/v0.1/u/data/stores/{ $storeID }/rdf' )
+function
+  data:get2(
+    $path as xs:string*,
+    $query as xs:string*,
+    $storeID,
+    $schema,
+    $access_token as xs:string*
+  )
+  {
+    let $data := data:get($path, $query, $storeID, $access_token)/file/table[1]
+    let $schema := sch:model(fetch:xml($schema)/csv)
+    return
+      rdf:rdf(rdf:trci($data, $schema))
+  };
 
 (:
   Возвращает ресурс $path из Яндекс-хранилища $storeID 
