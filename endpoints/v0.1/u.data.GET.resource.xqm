@@ -32,6 +32,7 @@ declare
   %rest:query-param( 'xq', '{ $query }', '.' )
   %rest:query-param( 'schema', '{ $schema }', '' )
   %rest:query-param( "access_token", "{ $access_token }", "" )
+  %output:method('xml')
   %rest:path( '/trac/api/v0.1/u/data/stores/{ $storeID }/rdf' )
 function
   data:get2(
