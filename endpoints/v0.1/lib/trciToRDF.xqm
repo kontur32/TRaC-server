@@ -4,7 +4,7 @@ import module namespace functx = 'http://www.functx.com';
 import module namespace dateTime = "dateTime" at 'http://iro37.ru/res/repo/dateTime.xqm';
 
 declare function rdf:id($record as element(row), $schemaID as xs:string){
-  'http://lipers.ru/сущности/ученики#' ||
+  $schemaID ||
   $record/cell[@label="номер личного дела"]/text()
 };
 
