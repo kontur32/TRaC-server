@@ -23,7 +23,44 @@ import module namespace rdf = "http://iro37.ru/trac/api/v0.1/u/data/stores/trciT
 declare variable 
   $data:зарезервированныеПараметрsЗапроса := 
     ( 'access_token', 'xq', 'starts', 'limit' );
-
+(:
+  Парсит xlsx-файл по страницам с применением одной схемы ко всем страницам
+  @param page список имен страниц, разделенных точкой с заятой
+:)
+declare
+  %public
+  %rest:method( 'GET' )
+  %rest:query-param( 'path', '{ $path }' )
+  %rest:query-param( 'xq', '{ $query }', '.' )
+  %rest:query-param( 'schema', '{ $schema }', '' )
+  %rest:query-param( 'page', '{ $page }', '' )
+  %rest:query-param( "access_token", "{ $access_token }", "" )
+  %output:method('xml')
+  %rest:path( '/trac/api/v0.2/u/data/stores/{ $storeID }/rdf' )
+function
+  data:get3(
+    $path as xs:string*,
+    $query as xs:string*,
+    $storeID,
+    $schema,
+    $page,
+    $access_token as xs:string*
+  )
+  {
+    let $pages := tokenize($page, ';')
+    let $data :=
+      data:get($path, $query, $storeID, $access_token)
+      /file/table[
+        if(empty($pages))then(1)else(@label=$pages)
+      ]
+    let $schema := sch:model(fetch:xml($schema)/csv)
+    return
+      <result>{
+        for $i in $data
+        return
+          rdf:rdf(rdf:trci($i, $schema))
+      }</result>
+  };
 
 declare
   %public
@@ -31,6 +68,7 @@ declare
   %rest:query-param( 'path', '{ $path }' )
   %rest:query-param( 'xq', '{ $query }', '.' )
   %rest:query-param( 'schema', '{ $schema }', '' )
+  %rest:query-param( 'page', '{ $page }', '' )
   %rest:query-param( "access_token", "{ $access_token }", "" )
   %output:method('xml')
   %rest:path( '/trac/api/v0.1/u/data/stores/{ $storeID }/rdf' )
@@ -40,10 +78,16 @@ function
     $query as xs:string*,
     $storeID,
     $schema,
+    $page,
     $access_token as xs:string*
   )
   {
-    let $data := data:get($path, $query, $storeID, $access_token)/file/table[1]
+    let $data :=
+      data:get($path, $query, $storeID, $access_token)
+      /file/table[
+        if($page!='')then(@label=$page)else(1)
+      ]
+    
     let $schema := sch:model(fetch:xml($schema)/csv)
     return
       rdf:rdf(rdf:trci($data, $schema))
