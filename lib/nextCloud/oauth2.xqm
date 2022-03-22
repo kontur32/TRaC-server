@@ -85,7 +85,7 @@ function oauth2:получитьТокен( $params as map(*), $tokenEndPoint, $
 };
 
 declare 
-  %private
+  %public
 function oauth2:authorizationCode( $params, $tokenEndPoint ){
   let $p := 
       map{
