@@ -20,7 +20,7 @@
         <xs:element maxOccurs="unbounded" minOccurs="0" ref="cell"/>
       </xs:sequence>
       <xs:attribute name="id" use="required" type="xs:anyURI"/>
-      <xs:attribute name="label" use="optional" type="xs:anyURI"/>
+      <xs:attribute name="label" use="optional" type="xs:string"/>
       <xs:attribute name="type" use="optional" type="xs:anyURI"/>
 	  <xs:attribute name="aboutType" use="optional" type="xs:anyURI"/>
     </xs:complexType>
@@ -31,7 +31,7 @@
         <xs:element name="table" maxOccurs="unbounded" minOccurs="0"/>
       </xs:sequence>        
       <xs:attribute name="id" use="required" type="xs:anyURI"/>
-      <xs:attribute name="label" use="optional" type="xs:anyURI"/>
+      <xs:attribute name="label" use="optional" type="xs:string"/>
     </xs:complexType>
   </xs:element>
   <xs:simpleType name = "status">
