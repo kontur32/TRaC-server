@@ -8,8 +8,9 @@ import module namespace читатьБД = 'http://iro37.ru/trac/core/data/dbRea
 
 declare
   %public
+  %updating
   %rest:method('GET')
-  %output:method('text')
+  %output:method('xml')
   %rest:query-param('path', '{$path}')
   %rest:query-param('refresh', '{$refresh}', '0')
   %rest:path('/trac/api/v0.1/p/data/stores/nextcloud/{$storeID}')
@@ -32,14 +33,16 @@ function data:getFromNextCloud($storeID as xs:string, $path as xs:string*, $refr
   return
    if($expiresDayTime > current-dateTime() and $refresh != '1')
    then(
-     $tokenRecord//access__token/text()
+     update:output($tokenRecord//access__token/text())
    )
    else(
      data:refreshAccessToken($tokenRecord, $storeRecord)
    )
 };
 
-declare function data:refreshAccessToken($tokenRecord, $storeRecord){
+declare
+  %updating
+function data:refreshAccessToken($tokenRecord, $storeRecord){
   let $token_path := 
     $storeRecord/cell[@id="http://dbx.iro37.ru/zapolnititul/признаки/oauth2_token_path"]/text()
   let $client_id := 
@@ -56,10 +59,15 @@ declare function data:refreshAccessToken($tokenRecord, $storeRecord){
         'refresh_token':$tokenRecord//refresh__token/text()
       }
     )
-  return
+  let $result :=
     http:send-request(
       <http:request method='POST'
          href='{iri-to-uri($refresh_url)}'/>
+    )
+  return
+    data:saveToStore(
+      substring-after($storeRecord/@id/data(), '#') || ':oauth2_token',
+      $result[2]
     )
 };
     
