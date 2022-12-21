@@ -34,7 +34,7 @@ function data:get($state as xs:string, $code as xs:string*){
     $storeRecord/cell[@id="http://dbx.iro37.ru/zapolnititul/признаки/client_secret"]/text()
   let $tokenRecord := data:tokenRecord($storeID)
   return
-    if(empty($code) and $tokenRecord//access__token/text())
+    if(empty($code))
     then(
       update:output(
         web:create-url(
