@@ -5,6 +5,62 @@ import module namespace config = 'http://iro37.ru/trac/core/utilits/config'
   
 import module namespace читатьБД = 'http://iro37.ru/trac/core/data/dbRead.Data'
   at '../../core/data/dbReadData.xqm';
+
+declare
+  %public
+  %rest:method('GET')
+  %output:method('text')
+  %rest:query-param('path', '{$path}')
+  %rest:path('/trac/api/v0.1/p/data/stores/nextcloud/{$storeID}')
+function data:getFromNextCloud($storeID as xs:string, $path as xs:string*){
+  let $storeRecord :=
+    читатьБД:данныеПользователя(
+      '220', 
+      1, 
+      10,
+      replace('.[row[ends-with(@id, "%1")]]', '%1', $storeID)
+    )?шаблоны/row[1]
+  
+  let $tokenRecord :=
+    db:open('titul24', 'store')/store/table[starts-with(@id, $storeID)][last()]
+  
+  let $updated := $tokenRecord/@updated/data()
+  let $expires := $tokenRecord//expires__in/number()
+  let $expiresDayTime := 
+     xs:dateTime($updated) + xs:dayTimeDuration('PT' || $expires - 10 || 'S' )
+  return
+   if($expiresDayTime > current-dateTime())
+   then(
+     $tokenRecord//access__token/text()
+   )
+   else(
+     data:refreshAccessToken($tokenRecord, $storeRecord)
+   )
+};
+
+declare function data:refreshAccessToken($tokenRecord, $storeRecord){
+  let $token_path := 
+    $storeRecord/cell[@id="http://dbx.iro37.ru/zapolnititul/признаки/oauth2_token_path"]/text()
+  let $client_id := 
+    $storeRecord/cell[@id="http://dbx.iro37.ru/zapolnititul/признаки/client_id"]/text()
+  let $client_secret := 
+    $storeRecord/cell[@id="http://dbx.iro37.ru/zapolnititul/признаки/client_secret"]/text()
+  let $refresh_url :=
+    web:create-url(
+      $token_path,
+      map{
+        'client_id':$client_id,
+        'client_secret':$client_secret,
+        'grant_type':'refresh_token',
+        'refresh_token':$tokenRecord//refresh__token/text()
+      }
+    )
+  return
+    http:send-request(
+      <http:request method='POST'
+         href='{iri-to-uri($refresh_url)}'/>
+    )
+};
     
 declare
   %private
