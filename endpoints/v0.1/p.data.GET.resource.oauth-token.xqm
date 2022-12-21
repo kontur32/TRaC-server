@@ -12,6 +12,7 @@ declare
   %rest:method('GET')
   %rest:query-param('state', '{$state}')
   %rest:query-param('code', '{$code}')
+  %output:method('text')
   %rest:path('/trac/api/v0.1/p/data/stores/oauth2/token')
 function data:get($state as xs:string, $code as xs:string*){
   let $storeID := substring-before($state, ':')
