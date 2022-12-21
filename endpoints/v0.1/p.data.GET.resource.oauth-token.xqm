@@ -11,9 +11,9 @@ declare
   %rest:method('GET')
   %output:method('text')
   %rest:query-param('path', '{$path}')
-  %rest:query-param('refresh', '{$refresh}')
+  %rest:query-param('refresh', '{$refresh}', '0')
   %rest:path('/trac/api/v0.1/p/data/stores/nextcloud/{$storeID}')
-function data:getFromNextCloud($storeID as xs:string, $path as xs:string*, $refresh as xs:string*){
+function data:getFromNextCloud($storeID as xs:string, $path as xs:string*, $refresh as xs:string){
   let $storeRecord :=
     читатьБД:данныеПользователя(
       '220', 
@@ -30,7 +30,7 @@ function data:getFromNextCloud($storeID as xs:string, $path as xs:string*, $refr
   let $expiresDayTime := 
      xs:dateTime($updated) + xs:dayTimeDuration('PT' || $expires - 10 || 'S' )
   return
-   if($expiresDayTime > current-dateTime() or $refresh='1')
+   if($expiresDayTime > current-dateTime() and $refresh != '1')
    then(
      $tokenRecord//access__token/text()
    )
