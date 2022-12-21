@@ -24,24 +24,33 @@ function data:getFromNextCloud($storeID as xs:string, $path as xs:string*, $refr
     )?шаблоны/row[1]
   
   let $tokenRecord :=
-    db:open('titul24', 'store')/store/table[starts-with(@id, $storeID)][last()]
+    db:open('titul24', 'store')
+    /store/table[starts-with(@id, $storeID)][last()]
   
   let $updated := $tokenRecord/@updated/data()
   let $expires := $tokenRecord//expires__in/number()
   let $expiresDayTime := 
      xs:dateTime($updated) + xs:dayTimeDuration('PT' || $expires - 10 || 'S' )
-  return
+  let $r := 
    if($expiresDayTime > current-dateTime() and $refresh != '1')
-   then(
-     update:output($tokenRecord//access__token/text())
-   )
-   else(
-     data:refreshAccessToken($tokenRecord, $storeRecord)
-   )
+   then($tokenRecord)
+   else(data:refreshAccessToken($tokenRecord, $storeRecord))
+  return
+    (
+      update:output($r),
+       if($expiresDayTime > current-dateTime() and $refresh != '1')
+       then()
+       else(
+         data:saveToStore(
+          substring-after($storeRecord/@id/data(), '#') || ':oauth2_token',
+          $r
+        )
+       )
+    )
 };
 
 declare
-  %updating
+  %private
 function data:refreshAccessToken($tokenRecord, $storeRecord){
   let $token_path := 
     $storeRecord/cell[@id="http://dbx.iro37.ru/zapolnititul/признаки/oauth2_token_path"]/text()
@@ -61,14 +70,10 @@ function data:refreshAccessToken($tokenRecord, $storeRecord){
     )
   let $result :=
     http:send-request(
-      <http:request method='POST'
-         href='{iri-to-uri($refresh_url)}'/>
+      <http:request method='POST' href='{iri-to-uri($refresh_url)}'/>
     )
   return
-    data:saveToStore(
-      substring-after($storeRecord/@id/data(), '#') || ':oauth2_token',
-      $result[2]
-    )
+   $result[2]
 };
     
 declare
