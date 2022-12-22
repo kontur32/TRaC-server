@@ -9,6 +9,9 @@ import module namespace читатьБД = 'http://iro37.ru/trac/core/data/dbRea
 import module namespace dav = 'http://dbx.iro37.ru/zapolnititul/api/v2.1/dav/'
   at '../../lib/nextCloud/webdav.xqm';
 
+import module namespace getData = 'http://iro37.ru/trac/api/v0.1/u/data/stores' at
+  'u.data.GET.resource.xqm';
+
 declare
   %public
   %updating
@@ -44,9 +47,11 @@ function data:getFromNextCloud($storeID as xs:string, $path as xs:string*, $refr
   return
     (
       update:output(
-        dav:получитьФайл(
-          $r//access__token/text(),
-          $davPath || $r//user__id/text() || '/' || $storePath || '/' || $path
+        getData:trci(
+          dav:получитьФайл(
+            $r//access__token/text(),
+            $davPath || $r//user__id/text() || '/' || $storePath || '/' || $path
+          )
         )
       ),
        if($expiresDayTime > current-dateTime() and $refresh != '1')
