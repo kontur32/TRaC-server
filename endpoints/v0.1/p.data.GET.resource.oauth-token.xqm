@@ -16,7 +16,7 @@ declare
   %output:method('xml')
   %rest:query-param('path', '{$path}')
   %rest:query-param('refresh', '{$refresh}', '0')
-  %rest:path('/trac/api/v0.1/p/data/stores/nextcloud/{$storeID}')
+  %rest:path('/trac/api/v0.1/p/data/stores/nextcloud/{$storeID}/file')
 function data:getFromNextCloud($storeID as xs:string, $path as xs:string*, $refresh as xs:string){
   let $storeRecord :=
     читатьБД:данныеПользователя(
@@ -42,8 +42,8 @@ function data:getFromNextCloud($storeID as xs:string, $path as xs:string*, $refr
     (
       update:output($r),
       update:output(
-        dav:получитьСвойстваПапки(
-          $r//access__token/text(), 'http://roz37.ru/unoi/remote.php/dav/files/artmotor1500'
+        dav:получитьФайл(
+          $r//access__token/text(), 'http://roz37.ru/unoi/remote.php/dav/files/' || $r//user__id/text() || $path
         )
       ),
        if($expiresDayTime > current-dateTime() and $refresh != '1')
