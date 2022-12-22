@@ -16,6 +16,7 @@ declare
   %public
   %updating
   %rest:method('GET')
+  %output:method('xml')
   %rest:query-param('path', '{$path}')
   %rest:query-param('refresh', '{$refresh}', '0')
   %rest:path('/trac/api/v0.1/u/data/stores/nextcloud/{$storeID}/file/trci')
