@@ -13,10 +13,9 @@ declare
   %public
   %updating
   %rest:method('GET')
-  %output:method('xml')
   %rest:query-param('path', '{$path}')
   %rest:query-param('refresh', '{$refresh}', '0')
-  %rest:path('/trac/api/v0.1/p/data/stores/nextcloud/{$storeID}/file')
+  %rest:path('/trac/api/v0.1/u/data/stores/nextcloud/{$storeID}/file')
 function data:getFromNextCloud($storeID as xs:string, $path as xs:string*, $refresh as xs:string){
   let $storeRecord :=
     читатьБД:данныеПользователя(
@@ -42,7 +41,6 @@ function data:getFromNextCloud($storeID as xs:string, $path as xs:string*, $refr
     $storeRecord/cell[@id="http://dbx.iro37.ru/zapolnititul/признаки/root_path"]/text() || '/remote.php/dav/files/'
   return
     (
-      update:output($r),
       update:output(
         dav:получитьФайл(
           $r//access__token/text(),
