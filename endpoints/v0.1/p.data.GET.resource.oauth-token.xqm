@@ -12,10 +12,6 @@ import module namespace dav = 'http://dbx.iro37.ru/zapolnititul/api/v2.1/dav/'
 import module namespace getData = 'http://iro37.ru/trac/api/v0.1/u/data/stores'
   at  'u.data.GET.resource.xqm';
 
-import module namespace trci = "http://www.iro37.ru/stasova/api/v1.1/parseXLSX"
-  at "../../../ooxml/xlsx/funct/parseXLSX-to-TRCI.xqm";
-
-
 declare
   %public
   %updating
@@ -52,7 +48,7 @@ function data:getFromNextCloud($storeID as xs:string, $path as xs:string*, $refr
   return
     (
       update:output(
-        trci:xlsx(
+        getData:trci(
           dav:получитьФайл(
             $r//access__token/text(),
             $davPath || $r//user__id/text() || '/' || $storePath || '/' || $path
