@@ -18,7 +18,7 @@ declare
   %rest:method('GET')
   %rest:query-param('path', '{$path}')
   %rest:query-param('refresh', '{$refresh}', '0')
-  %rest:path('/trac/api/v0.1/u/data/stores/nextcloud/{$storeID}/file')
+  %rest:path('/trac/api/v0.1/u/data/stores/nextcloud/{$storeID}/file/trci')
 function data:getFromNextCloud($storeID as xs:string, $path as xs:string*, $refresh as xs:string){
   let $storeRecord :=
     читатьБД:данныеПользователя(
