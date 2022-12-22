@@ -19,7 +19,7 @@ declare
 function data:getFromNextCloud($storeID as xs:string, $path as xs:string*, $refresh as xs:string){
   let $storeRecord :=
     читатьБД:данныеПользователя(
-      '220', 
+      session:get('userID'), 
       1, 
       10,
       replace('.[row[ends-with(@id, "%1")]]', '%1', $storeID)
