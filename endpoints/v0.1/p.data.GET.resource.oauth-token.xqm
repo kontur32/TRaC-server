@@ -6,6 +6,9 @@ import module namespace config = 'http://iro37.ru/trac/core/utilits/config'
 import module namespace читатьБД = 'http://iro37.ru/trac/core/data/dbRead.Data'
   at '../../core/data/dbReadData.xqm';
 
+import module namespace dav = 'http://dbx.iro37.ru/zapolnititul/api/v2.1/dav/'
+  at '../../lib/nextCloud/webdav.xqm';
+
 declare
   %public
   %updating
@@ -38,6 +41,11 @@ function data:getFromNextCloud($storeID as xs:string, $path as xs:string*, $refr
   return
     (
       update:output($r),
+      update:output(
+        dav:получитьСвойстваПапки(
+          $r//access__token/text(), 'http://roz37.ru/unoi/remote.php/dav/files/artmotor1500'
+        )
+      ),
        if($expiresDayTime > current-dateTime() and $refresh != '1')
        then()
        else(
