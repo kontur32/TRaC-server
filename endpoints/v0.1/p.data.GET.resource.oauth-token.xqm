@@ -39,12 +39,14 @@ function data:getFromNextCloud($storeID as xs:string, $path as xs:string*, $refr
    else(data:refreshAccessToken($tokenRecord, $storeRecord))
   let $davPath := 
     $storeRecord/cell[@id="http://dbx.iro37.ru/zapolnititul/признаки/root_path"]/text() || '/remote.php/dav/files/'
+  let $storePath :=
+    $storeRecord/cell[@id="http://dbx.iro37.ru/zapolnititul/признаки/локальныйПуть"]/text()
   return
     (
       update:output(
         dav:получитьФайл(
           $r//access__token/text(),
-          $davPath || $r//user__id/text() || '/' || $path
+          $davPath || $r//user__id/text() || '/' || $storePath || '/' || $path
         )
       ),
        if($expiresDayTime > current-dateTime() and $refresh != '1')
