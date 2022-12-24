@@ -12,58 +12,55 @@ import module namespace dav = 'http://dbx.iro37.ru/zapolnititul/api/v2.1/dav/'
 import module namespace getData = 'http://iro37.ru/trac/api/v0.1/u/data/stores'
   at  'u.data.GET.resource.xqm';
 
+import module namespace localStore = 'http://iro37.ru/trac/lib/localStore'
+  at '../../lib/localStore.xqm';
+
 declare
   %public
-  %updating
   %rest:method('GET')
   %output:method('xml')
   %rest:query-param('path', '{$path}')
-  %rest:query-param('refresh', '{$refresh}', '0')
   %rest:path('/trac/api/v0.1/u/data/stores/nextcloud/{$storeID}/file/trci')
-function data:getFromNextCloud($storeID as xs:string, $path as xs:string*, $refresh as xs:string){
+function data:getFromNextCloud(
+  $storeID as xs:string,
+  $path as xs:string
+){
   let $storeRecord :=
     читатьБД:данныеПользователя(
-      session:get('userID'), 
-      1, 
-      10,
+      session:get('userID'), 1, 1,
       replace('.[row[ends-with(@id, "%1")]]', '%1', $storeID)
-    )?шаблоны/row[1]
+    )?шаблоны/row
   
-  let $tokenRecord :=
-    db:open('titul24', 'store')
-    /store/table[starts-with(@id, $storeID)][last()]
+  let $tokenRecord := 
+    let $hash := $storeID || ':oauth2_token'
+    let $currentTokenRecord := localStore:readFromStore($hash)      
+    let $updated := $currentTokenRecord/@updated/data()
+    let $expires := $currentTokenRecord//expires__in/number()
+    let $expiresDayTime := 
+       xs:dateTime($updated) + xs:dayTimeDuration('PT' || $expires - 10 || 'S' )
+    return
+     if($expiresDayTime > current-dateTime())
+     then($currentTokenRecord)
+     else(
+       let $newTokenRecord :=
+         data:refreshAccessToken($currentTokenRecord, $storeRecord)
+       return
+       (
+         $newTokenRecord,
+         localStore:saveToStore(localStore:buildRecord($newTokenRecord, $hash))
+       )
+     )
   
-  let $updated := $tokenRecord/@updated/data()
-  let $expires := $tokenRecord//expires__in/number()
-  let $expiresDayTime := 
-     xs:dateTime($updated) + xs:dayTimeDuration('PT' || $expires - 10 || 'S' )
-  let $r := 
-   if($expiresDayTime > current-dateTime() and $refresh != '1')
-   then($tokenRecord)
-   else(data:refreshAccessToken($tokenRecord, $storeRecord))
   let $davPath := 
     $storeRecord/cell[@id="http://dbx.iro37.ru/zapolnititul/признаки/root_path"]/text() || '/remote.php/dav/files/'
   let $storePath :=
     $storeRecord/cell[@id="http://dbx.iro37.ru/zapolnititul/признаки/локальныйПуть"]/text()
+  let $userLoginInStore := $tokenRecord//user__id/text()
+  let $fullDavFilePath := 
+    $davPath || $userLoginInStore || '/' || $storePath || '/' || $path
+  let $accessToken := $tokenRecord//access__token/text()
   return
-    (
-      update:output(
-        getData:trci(
-          dav:получитьФайл(
-            $r//access__token/text(),
-            $davPath || $r//user__id/text() || '/' || $storePath || '/' || $path
-          )
-        )
-      ),
-       if($expiresDayTime > current-dateTime() and $refresh != '1')
-       then()
-       else(
-         data:saveToStore(
-          substring-after($storeRecord/@id/data(), '#') || ':oauth2_token',
-          $r
-        )
-       )
-    )
+      (dav:получитьФайл($accessToken, $fullDavFilePath))
 };
 
 declare
@@ -95,7 +92,6 @@ function data:refreshAccessToken($tokenRecord, $storeRecord){
     
 declare
   %private
-  %updating
   %rest:method('GET')
   %rest:query-param('state', '{$state}')
   %rest:query-param('code', '{$code}')
@@ -120,16 +116,13 @@ function data:get($state as xs:string, $code as xs:string*){
     $storeRecord/cell[@id="http://dbx.iro37.ru/zapolnititul/признаки/client_id"]/text()
   let $client_secret := 
     $storeRecord/cell[@id="http://dbx.iro37.ru/zapolnititul/признаки/client_secret"]/text()
-  let $tokenRecord := data:tokenRecord($storeID)
   return
     if(empty($code))
     then(
-      update:output(
-        web:create-url(
-           $authorize_path,
-           map{'response_type':'code', 'client_id':$client_id, 'state':$state}
-         )
-       )
+      web:create-url(
+       $authorize_path,
+       map{'response_type':'code', 'client_id':$client_id, 'state':$state}
+      )
     )
     else(
       let $href := 
@@ -149,28 +142,11 @@ function data:get($state as xs:string, $code as xs:string*){
       return
         if($result[1]/@status/data()!="400")
         then(
-          update:output('OK'),
-          data:saveToStore($storeID || ':oauth2_token', $result[2])
+          'OK',
+          localStore:saveToStore(
+            localStore:buildRecord($result[2], $storeID || ':oauth2_token')
+          )
         )
-        else(update:output(<err:ошибка_получения_токена/>))
+        else(<err:ошибка_получения_токена/>)
     )
 };
-
-declare 
-function data:tokenRecord($storeID){ 
-    db:open('titul24', 'store')
-    /store/table[@id/data()=$storeID || ':oauth2_token'][last()]
-};
-
-declare 
-  %updating
-function data:saveToStore($hash, $record){
-  let $db := 
-    db:open('titul24', 'store')/store
-  let $rec := <table id="{$hash}" updated="{current-dateTime()}">{$record}</table>
-  return
-    if($db/table/@id/data() = $hash)
-    then(replace node $db/table[@id/data()=$hash][last()] with $rec)
-    else(insert node $rec into $db)
-};
-  

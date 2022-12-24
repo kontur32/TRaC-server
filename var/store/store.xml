@@ -1,0 +1,20 @@
+<store>
+  <table id="49a13896-2149-40e0-9d7e-9a37cfae1b81:oauth2_token" updated="2022-12-21T16:59:30.706+03:00">
+    <json type="object">
+      <access__token>eSzaiT7cPl0jPEThnZKrPIeSw1oBHjYGU0iJ0c9x51RCF5zA5jtfqovlj6agyoVNfL7fX8Xb</access__token>
+      <token__type>Bearer</token__type>
+      <expires__in type="number">3600</expires__in>
+      <refresh__token>4NginXy6n1uWpdNmShw4taq5D5HZSyOaoigaG7TMoZAnnW4PAhRAZrReJW03nZ26o3WVxZaReMVyyyH6yUK0az6KGfgdxc49hNnq94sZAMRbGsEcgviPQQ5tIid2Q8SF</refresh__token>
+      <user__id>artmotor1500</user__id>
+    </json>
+  </table>
+  <table id="5b675444-6138-4918-a120-1e66a31ac300:oauth2_token" updated="2022-12-24T16:44:43.386+03:00">
+    <json type="object">
+      <access__token>2J9AVgxEzez44cEq5mbgCiwpfE9ewz95NSjZauGfJahs93db9cPbx7kpRRHhSVHnXmxnMiYv</access__token>
+      <token__type>Bearer</token__type>
+      <expires__in type="number">3600</expires__in>
+      <refresh__token>fqFOS1EGrbcgx3WUqBYZYJh48zZxPFhBazUlu1DW40a2tZMjbvS5zbrI2Icui8mUE1ITzY93etXAaxsup0mRCGt2QJY7Q1ZFktrOTbumpfzNdtOxgQnu22C0C1uLQpDh</refresh__token>
+      <user__id>artmotor1500</user__id>
+    </json>
+  </table>
+</store>

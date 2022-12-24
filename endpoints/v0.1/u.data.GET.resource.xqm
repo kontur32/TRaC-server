@@ -17,8 +17,12 @@ import module namespace nc = 'http://iro37.ru/trac/lib/nextCloud'
 
 import module namespace sch = "http://iro37.ru/trac/api/v0.1/u/data/stores/modelRDF"
   at 'lib/modelRDF.xqm';
+  
 import module namespace rdf = "http://iro37.ru/trac/api/v0.1/u/data/stores/trciToRDF"
   at 'lib/trciToRDF.xqm';
+  
+import module namespace ncOAuth2 = 'http://iro37.ru/trac/api/v0.1/u/data/stores/nextCloudOAuth2s'
+  at 'p.data.GET.resource.oauth-token.xqm';
   
 declare variable 
   $data:зарезервированныеПараметрsЗапроса := 
@@ -29,14 +33,14 @@ declare variable
 :)
 declare
   %public
-  %rest:method( 'GET' )
-  %rest:query-param( 'path', '{ $path }' )
-  %rest:query-param( 'xq', '{ $query }', '.' )
-  %rest:query-param( 'schema', '{ $schema }', '' )
-  %rest:query-param( 'page', '{ $page }', '' )
-  %rest:query-param( "access_token", "{ $access_token }", "" )
+  %rest:method('GET')
+  %rest:query-param('path', '{$path}')
+  %rest:query-param('xq', '{$query}', '.')
+  %rest:query-param('schema', '{$schema}', '')
+  %rest:query-param('page', '{$page}', '')
+  %rest:query-param("access_token", "{$access_token}", "")
   %output:method('xml')
-  %rest:path( '/trac/api/v0.2/u/data/stores/{ $storeID }/rdf' )
+  %rest:path( '/trac/api/v0.2/u/data/stores/{$storeID}/rdf')
 function
   data:get3(
     $path as xs:string*,
@@ -64,14 +68,14 @@ function
 
 declare
   %public
-  %rest:method( 'GET' )
-  %rest:query-param( 'path', '{ $path }' )
-  %rest:query-param( 'xq', '{ $query }', '.' )
-  %rest:query-param( 'schema', '{ $schema }', '' )
-  %rest:query-param( 'page', '{ $page }', '' )
-  %rest:query-param( "access_token", "{ $access_token }", "" )
+  %rest:method('GET')
+  %rest:query-param('path', '{$path}')
+  %rest:query-param('xq', '{$query}', '.')
+  %rest:query-param('schema', '{$schema}', '')
+  %rest:query-param('page', '{$page}', '')
+  %rest:query-param("access_token", "{$access_token}", "")
   %output:method('xml')
-  %rest:path( '/trac/api/v0.1/u/data/stores/{ $storeID }/rdf' )
+  %rest:path('/trac/api/v0.1/u/data/stores/{$storeID}/rdf')
 function
   data:get2(
     $path as xs:string*,
@@ -87,7 +91,6 @@ function
       /file/table[
         if($page!='')then(@label=$page)else(1)
       ]
-    
     let $schema := sch:model(fetch:xml($schema)/csv)
     return
       rdf:rdf(rdf:trci($data, $schema))
@@ -97,14 +100,13 @@ function
   Возвращает ресурс $path из Яндекс-хранилища $storeID 
   в формате TRCI или сообщение об ошибке
 :)
-
 declare
   %public
-  %rest:method( 'GET' )
-  %rest:query-param( 'path', '{ $path }' )
-  %rest:query-param( 'xq', '{ $query }', '.' )
-  %rest:query-param( "access_token", "{ $access_token }", "" )
-  %rest:path( '/trac/api/v0.1/u/data/stores/{ $storeID }' )
+  %rest:method('GET')
+  %rest:query-param('path', '{$path}')
+  %rest:query-param('xq', '{$query}', '.')
+  %rest:query-param("access_token", "{$access_token}", "")
+  %rest:path('/trac/api/v0.1/u/data/stores/{$storeID}')
 function
   data:get(
     $path as xs:string*,
@@ -115,15 +117,15 @@ function
   {
     let $данныеПользователя :=
       читатьБД:данныеПользователя(
-        session:get( 'userID' ), 1, 0,'.',
-        map{ 'имяПеременойПараметров' : 'params', 'значенияПараметров' : map{}  }
+        session:get('userID'), 1, 0,'.',
+        map{'имяПеременойПараметров' : 'params', 'значенияПараметров' : map{}}
       )?шаблоны
     
     let $storeRecord := 
       $данныеПользователя[ row[ ends-with( @id, $storeID ) ] ]
     
     let $f :=
-      function( $p ){ data:xlsx-to-trci( $p?storeRecord, $p?path, $p?query ) }
+      function($p){data:xlsx-to-trci($p?storeRecord, $p?path, $p?query)}
     
     return
       if( request:parameter( 'nocache' ) )
@@ -194,16 +196,25 @@ function
 (:
   возвращает файл в формате base64
 :)
-declare function data:getFileRaw(  $storeRecord as element( table ), $path as xs:string* )
+declare function data:getFileRaw(
+  $storeRecord as element(table),
+  $path as xs:string*
+)
   as xs:base64Binary
 {
   switch ( $storeRecord/row/@type/data() )
   case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеЯндексДиск'
     return
-      yandex:getResource( $storeRecord, $path )
+      yandex:getResource($storeRecord, $path)
   case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеNextcloud'
     return
-      nc:getResource( $storeRecord,  $config:params?tokenRecordsFilePath, $path )
+      nc:getResource($storeRecord,  $config:params?tokenRecordsFilePath, $path)
+  case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеNextCloudOauth2'
+    return
+      ncOAuth2:getFromNextCloud(
+        substring-after($storeRecord//row[1]/@id/data(), '#'), 
+        $path
+      )
   default
     return
       <err:RES02>Тип хранилища не зарегистрирован</err:RES02>
