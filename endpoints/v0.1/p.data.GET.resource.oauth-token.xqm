@@ -10,7 +10,7 @@ import module namespace dav = 'http://dbx.iro37.ru/zapolnititul/api/v2.1/dav/'
   at '../../lib/nextCloud/webdav.xqm';
 
 import module namespace getData = 'http://iro37.ru/trac/api/v0.1/u/data/stores'
-  at  'u.data.GET.resource.xqm';
+  at  'u.resource.GET.xqm';
 
 import module namespace localStore = 'http://iro37.ru/trac/lib/localStore'
   at '../../lib/localStore.xqm';

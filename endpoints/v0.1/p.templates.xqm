@@ -5,7 +5,7 @@ import module namespace читатьБД = 'http://iro37.ru/trac/core/data/dbRea
   
 declare
   %private
-  %rest:method( 'GET' )
+  %rest:GET
   %rest:query-param( 'starts', '{ $starts }' )
   %rest:query-param( 'limit', '{ $limit }' )
   %rest:path( '/trac/api/v0.1/p/templates' )
