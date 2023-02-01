@@ -1,10 +1,10 @@
 module namespace data = 'http://iro37.ru/trac/api/v0.1/u/data';
 
 import module namespace config = 'http://iro37.ru/trac/core/utilits/config' 
-  at '../../core/utilits/config.xqm';
+  at '../../../core/utilits/config.xqm';
     
 import module namespace читатьБД = 'http://iro37.ru/trac/core/data/dbRead.Data'
-  at '../../core/data/dbReadData.xqm';
+  at '../../../core/data/dbReadData.xqm';
 
 declare variable 
   $data:зарезервированныеПараметрsЗапроса := ('xq', 'starts', 'limit');

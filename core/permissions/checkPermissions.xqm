@@ -58,18 +58,18 @@ function check:check( $perm, $access_token, $access_token_form ) {
     )
 };
 
-(: кэширование ответов :)
+(: кэширование ответов - рудимент :)
 
 declare
   %rest:GET
-  %perm:check( '/trac/api/v0.1/u/forms' )
+  %perm:check( '/trac/api/v0.1/u000/forms' )
 function check:getForms(){
   check:getData()
 };
 
 declare
   %rest:GET
-  %perm:check( '/trac/api/v0.1/u/data' )
+  %perm:check( '/trac/api/v0.1/u000/data' )
 function check:getData(){
   let $params := 
     string-join(

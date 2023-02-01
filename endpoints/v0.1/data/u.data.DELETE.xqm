@@ -1,10 +1,10 @@
 module namespace data = 'http://iro37.ru/trac/api/v0.1/u/data';
 
 import module namespace читатьБД = 'http://iro37.ru/trac/core/data/dbRead.Data'
-  at '../../core/data/dbReadData.xqm';
+  at '../../../core/data/dbReadData.xqm';
   
 import module namespace auth = "http://iro37.ru/trac/core/permissions/auth"
-  at '../../core/permissions/auth.xqm';
+  at '../../../core/permissions/auth.xqm';
   
 declare
   %updating
