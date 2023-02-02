@@ -16,22 +16,22 @@ declare
   %public
 function fuseki2:uploadGraph(
   $rdf as element(Q{http://www.w3.org/1999/02/22-rdf-syntax-ns#}RDF),
-  $graphName as xs:string,
+  $graphURI as xs:string,
   $endPoint as xs:string
-) as xs:string
+)
 {
+  let $url :=
+    web:create-url($endPoint || "/data", map{'graph':$graphURI})
   let $request :=
       <http:request method='POST'>
         <http:multipart media-type="multipart/form-data; boundary=----7MA4YWxkTrZu0gW">
-            <http:header name="Content-Disposition" value='form-data; name="file"; filename="file.rdf'/>
-            <http:body media-type="application/rdf+xml">{$rdf}</http:body>
-            <http:header name="Content-Disposition" value= 'form-data; name="graph";'/>
-            <http:body media-type="text/plain">{$graphName}</http:body>
+            <http:header name="Content-Disposition" value='form-data; name="file"; filename="file.rdf"'/>
+            <http:body media-type="application/rdf+xml">{$rdf}</http:body>           
         </http:multipart> 
       </http:request>   
-  let $response := http:send-request($request, $endPoint || "/upload")
+  let $response := http:send-request($request, $url)
   return
-     $response[1]/@status/data()  
+     $response[2]/@status/text()
 };
 
 declare

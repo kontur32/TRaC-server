@@ -21,7 +21,7 @@ declare function graph:datasetName(){
 (:  публикует RDF-ресурс в графе датесета пользователя :)
 declare 
   %rest:POST
-  %rest:form-param("graphURI","{$graphURI}", "")
+  %rest:query-param("graphURI","{$graphURI}", "")
   %rest:form-param("file","{$file}")
   %rest:path("/trac/api/v0.1/u/rdf/graph")
   %public
@@ -59,7 +59,7 @@ function graph:uploadGraph($graphURI as xs:string, $file as map(*)){
 (: обновляет RDF-ресурс в графе датасета пользователя :)
 declare 
   %rest:PUT
-  %rest:form-param("graphURI","{$graphURI}", "")
+  %rest:query-param("graphURI","{$graphURI}", "")
   %rest:form-param("file","{$file}")
   %rest:path("/trac/api/v0.1/u/rdf/graph")
   %public
