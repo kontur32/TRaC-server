@@ -15,7 +15,7 @@ declare function graph:datasetEndpoint(){
 };
 
 declare function graph:datasetName(){
-  conf:param('authDomain') || ':' || session:get('userID')
+   conf:param('authDomain') || ':' || session:get('userID')
 };
 
 (:  публикует RDF-ресурс в графе датесета пользователя :)
@@ -62,7 +62,7 @@ declare
   %rest:form-param("graphURI","{$graphURI}", "")
   %rest:form-param("file","{$file}")
   %rest:path("/trac/api/v0.1/u/rdf/graph")
-  %private
+  %public
 function graph:updateGraph($graphURI as xs:string, $file as map(*)){
     if(r:datasetExists())  
     then(
@@ -134,7 +134,7 @@ declare
   %output:method('text')
   %rest:query-param("graphURI", "{$graphURI}", "")
   %rest:path("/trac/api/v0.1/u/rdf/graph")
-  %private
+  %public
 function graph:graphDelete($graphURI as xs:string)
 {
   if($graphURI!='')

@@ -68,3 +68,48 @@ function rdf:upload(
        map{'file':convert:string-to-base64(serialize($rdf))}
      )
 };
+
+(: обновляет ресурс в RDF-хранилище :)
+declare
+  %public
+  %rest:PUT
+  %rest:form-param('path', '{$path}')
+  %rest:form-param('schema', '{$schema}')
+  %rest:path('/trac/api/v0.1/u/rdf/stores/{$storeID}')
+function rdf:update(
+  $path as xs:string*,
+  $schema as xs:string*,
+  $storeID as xs:string
+)
+{
+   let $trci := resource:get($path, '.', $storeID, ())//table[1]
+   let $rdf :=
+     rdf:trci-to-rdf(
+       convert:string-to-base64(serialize($trci)),
+       $schema
+     )
+   let $graphURI :=
+     graph:datasetName()||'/store/'||$storeID||'/'||$path
+   return
+     graph:updateGraph(
+       $graphURI,
+       map{'file':convert:string-to-base64(serialize($rdf))}
+     )
+};
+
+(: удаляет ресурс в RDF-хранилище :)
+declare
+  %public
+  %rest:DELETE
+  %rest:form-param('path', '{$path}')
+  %rest:path('/trac/api/v0.1/u/rdf/stores/{$storeID}')
+function rdf:delete(
+  $path as xs:string*,
+  $storeID as xs:string
+)
+{
+   let $graphURI :=
+     graph:datasetName()||'/store/'||$storeID||'/'||$path
+   return
+     graph:graphDelete($graphURI)
+};
