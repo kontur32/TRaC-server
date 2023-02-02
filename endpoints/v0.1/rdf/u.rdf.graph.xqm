@@ -11,7 +11,7 @@ import module namespace r = 'http://iro37.ru/trac/api/v0.1/u/rdf/dataset'
 
 (: генерирует URL датасета :)
 declare function graph:datasetEndpoint(){
-  conf:param('rdfEndpoint') || graph:datasetName()
+  conf:param('rdfEndpoint') ||  graph:datasetName()
 };
 
 declare function graph:datasetName(){
@@ -28,9 +28,9 @@ declare
 function graph:uploadGraph($graphURI as xs:string, $file as map(*)){
     if(r:datasetExists())  
     then(
-      if(not(graph:graphExists($graphURI)='true'))
+      if($graphURI != "")
       then(
-        if($graphURI != "")
+        if(not(graph:isExists($graphURI)))
         then(
           let $datasetEndpoint := graph:datasetEndpoint()
           let $rdf := 
@@ -41,13 +41,13 @@ function graph:uploadGraph($graphURI as xs:string, $file as map(*)){
             fuseki2:uploadGraph($rdf, $graphURI, $datasetEndpoint)
         )
         else(
-          <rest:response><http:response status="404"/></rest:response>,
-          'graphURI - не указано имя графа обязательный параметр'
+          <rest:response><http:response status="409"/></rest:response>, 
+          'Используйте метод PUT'
         )
       )
       else(
-          <rest:response><http:response status="409"/></rest:response>, 
-          'Используйте метод PUT'
+          <rest:response><http:response status="400"/></rest:response>,
+          'graphURI - не указано имя графа обязательный параметр'
       )
     )
     else(
@@ -66,29 +66,47 @@ declare
 function graph:updateGraph($graphURI as xs:string, $file as map(*)){
     if(r:datasetExists())  
     then(
-      if(graph:graphExists($graphURI)='true')
+      if(graph:isExists($graphURI))
       then(
-        if($graphURI != "")
-        then(
-          let $datasetEndpoint := graph:datasetEndpoint()
-          let $rdf := 
-            parse-xml(
-              convert:binary-to-string(map:get($file, map:keys($file)[1]))
-            )/child::* 
-          return
-            (
-              fuseki2:deleteGraph($graphURI, $datasetEndpoint),
-              fuseki2:uploadGraph($rdf, $graphURI, $datasetEndpoint)
-            )
-        )
-        else('Необходимо указать имя графа')
+        let $datasetEndpoint := graph:datasetEndpoint()
+        let $rdf := 
+          parse-xml(
+            convert:binary-to-string(map:get($file, map:keys($file)[1]))
+          )/child::* 
+        let $result :=
+          (
+            fuseki2:deleteGraph($graphURI, $datasetEndpoint),
+            fuseki2:uploadGraph($rdf, $graphURI, $datasetEndpoint)
+          )
+        return
+          if($result[1]="200" and $result[2]="200")
+          then(
+            <rest:response><http:response status="200"/></rest:response>
+          )
       )
-      else('Граф <' || $graphURI  || '> не существует. Исользуйте метод POST.')
+      else(
+        <rest:response><http:response status="404"/></rest:response>,
+        'Граф <' || $graphURI  || '> не существует. Исользуйте метод POST.'
+      )
     )
-    else('Датасет пользователя не существует')
+    else(
+      <rest:response><http:response status="404"/></rest:response>,
+      'Датасет пользователя не существует'
+    )
 };
 
 (:  проверяет наличие графа в хранилище :)
+declare function graph:isExists($graphURI as xs:string)
+{
+  let $graphsList :=
+    fuseki2:get(
+      'SELECT DISTINCT ?g WHERE { GRAPH ?g {?s ?p ?o;} }',
+      graph:datasetEndpoint()
+    )//g/value/text()
+  return
+    $graphsList = $graphURI
+};
+
 declare 
   %rest:GET
   %output:method('text')
@@ -99,15 +117,9 @@ function graph:graphExists($graphURI as xs:string)
 {
   if($graphURI!='')
   then(
-    let $graphsList :=
-      fuseki2:get(
-        'SELECT DISTINCT ?g WHERE { GRAPH ?g {?s ?p ?o;} }',
-        graph:datasetEndpoint()
-      )//g/value/text()
-    return
-      if($graphsList = $graphURI)
-      then(<rest:response><http:response status="200"/></rest:response>)
-      else(<rest:response><http:response status="404"/></rest:response>)
+    if(graph:isExists($graphURI))
+    then(<rest:response><http:response status="200"/></rest:response>)
+    else(<rest:response><http:response status="404"/></rest:response>)
    )
    else(
      <rest:response><http:response status="400"/></rest:response>,

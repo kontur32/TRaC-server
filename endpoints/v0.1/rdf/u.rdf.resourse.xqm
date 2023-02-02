@@ -9,7 +9,7 @@ import module namespace graph = 'http://iro37.ru/trac/api/v0.1/u/rdf/graph'
 import module namespace resource = 'http://iro37.ru/trac/api/v0.1/u/data/stores'
   at '../u.resource.xqm';
 
-(: генерирует RDF/XML из TRCI - публичный метод :)
+(: преобразует TRCI в RDF/XML - публичный метод :)
 declare 
   %rest:POST
   %output:method('xml')
@@ -19,13 +19,13 @@ declare
   %private
 function rdf:trci-to-rdf(
   $trci, $schema as xs:string
-) as element(Q{http://www.w3.org/1999/02/22-rdf-syntax-ns#}RDF)
+) 
 {
   let $rawData :=
     if($trci instance of map(*))
     then(map:get($trci, map:keys($trci)[1]))
     else(xs:base64Binary($trci))
- let $request := 
+  let $request := 
       <http:request method='POST'>
         <http:header name="Content-type" value="multipart/form-data"/>
           <http:multipart media-type = "multipart/form-data" >
@@ -38,7 +38,7 @@ function rdf:trci-to-rdf(
   let $response := 
     http:send-request($request, conf:param('semantic.factory'))
   return
-   $response[2]/child::*
+   $response[2]/Q{http://www.w3.org/1999/02/22-rdf-syntax-ns#}RDF
 };
 
 (: загружает ресурс в RDF-хранилище :)
@@ -61,7 +61,10 @@ function rdf:upload(
        $schema
      )
    let $graphURI :=
-     graph:datasetName() || '/store/' || $storeID || '/' || $path
+     graph:datasetName()||'/store/'||$storeID||'/'||$path
    return
-     graph:uploadGraph($graphURI, map{'file':convert:string-to-base64(serialize($rdf))})
+     graph:uploadGraph(
+       $graphURI,
+       map{'file':convert:string-to-base64(serialize($rdf))}
+     )
 };
