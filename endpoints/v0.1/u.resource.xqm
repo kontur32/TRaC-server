@@ -9,6 +9,12 @@ import module namespace читатьБД = 'http://iro37.ru/trac/core/data/dbRea
 import module namespace file = 'http://iro37.ru/trac/api/v0.1/u/data/stores/file'
   at '../../lib/getFileRaw.xqm';
 
+import module namespace sch = "http://iro37.ru/trac/api/v0.1/u/data/stores/modelRDF"
+  at 'lib/modelRDF.xqm';
+  
+import module namespace rdf = "http://iro37.ru/trac/api/v0.1/u/data/stores/trciToRDF"
+  at 'lib/trciToRDF.xqm';
+
 declare variable 
   $data:зарезервированныеПараметрsЗапроса := ('xq', 'starts', 'limit');
 
@@ -18,6 +24,76 @@ declare variable
     "/ooxml/api/v1.1/xlsx/parse/workbook";
 
 declare variable  $data:разеделитель := ';';
+
+(:
+  Парсит xlsx-файл по страницам с применением одной схемы ко всем страницам
+  @param page список имен страниц, разделенных точкой с запятой
+:)
+declare
+  %public
+  %rest:method('GET')
+  %rest:query-param('path', '{$path}')
+  %rest:query-param('xq', '{$query}', '.')
+  %rest:query-param('schema', '{$schema}', '')
+  %rest:query-param('page', '{$page}', '')
+  %rest:query-param("access_token", "{$access_token}", "")
+  %output:method('xml')
+  %rest:path( '/trac/api/v0.2/u/data/stores/{$storeID}/rdf')
+function
+  data:get3(
+    $path as xs:string*,
+    $query as xs:string*,
+    $storeID,
+    $schema,
+    $page,
+    $access_token as xs:string*
+  )
+  {
+    let $pages := tokenize($page, ';')
+    let $data :=
+      data:get($path, $storeID)
+      /file/table[
+        if(empty($pages))then(1)else(@label=$pages)
+      ]
+    let $schema := sch:model(fetch:xml($schema)/csv)
+    return
+      <result>{
+        for $i in $data
+        return
+          rdf:rdf(rdf:trci($i, $schema))
+      }</result>
+  };
+
+declare
+  %public
+  %rest:method('GET')
+  %rest:query-param('path', '{$path}')
+  %rest:query-param('xq', '{$query}', '.')
+  %rest:query-param('schema', '{$schema}', '')
+  %rest:query-param('page', '{$page}', '')
+  %rest:query-param("access_token", "{$access_token}", "")
+  %output:method('xml')
+  %rest:path('/trac/api/v0.1/u/data/stores/{$storeID}/rdf')
+function
+  data:get2(
+    $path as xs:string*,
+    $query as xs:string*,
+    $storeID,
+    $schema,
+    $page,
+    $access_token as xs:string*
+  )
+  {
+    let $data :=
+      data:get($path,$storeID)
+      /file/table[
+        if($page!='')then(@label=$page)else(1)
+      ]
+    let $schema := sch:model(fetch:xml($schema)/csv)
+    return
+      rdf:rdf(rdf:trci($data, $schema))
+  };
+
 
 (:
   Возвращает ресурсы, указанные в $path через точку с запятой 
