@@ -1,12 +1,12 @@
 module namespace rdf = 'http://iro37.ru/trac/api/v0.1/u/rdf/dataset';
 
 import module namespace c = 'http://iro37.ru/trac/core/utilits/config' 
-  at '../../core/utilits/config.xqm';
+  at '../../../core/utilits/config.xqm';
 
 import module namespace f2 = 'http://garpix.com/semantik/app/fuseki2' 
-  at '../../lib/client.fuseki2.xqm';
+  at '../../../lib/client.fuseki2.xqm';
 
-(: генерирует URL датасета :)
+(: генерирует URI датасета :)
 declare function rdf:datasetName(){
   c:param('authDomain') || ':' || session:get('userID')
 };

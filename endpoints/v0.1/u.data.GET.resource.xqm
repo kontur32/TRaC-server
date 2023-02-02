@@ -123,21 +123,9 @@ function
     
     let $storeRecord := 
       $данныеПользователя[ row[ ends-with( @id, $storeID ) ] ]
-    
-    let $f :=
-      function($p){data:xlsx-to-trci($p?storeRecord, $p?path, $p?query)}
-    
+
     return
-      if( request:parameter( 'nocache' ) )
-      then( data:xlsx-to-trci( $storeRecord, $path, $query ) )
-      else(
-        let $uri :=
-          request:uri() || $path || $query ||  session:get( 'userID' )
-        return
-          data:getResource(
-            $uri, $f, map{ 'storeRecord' : $storeRecord, 'path' : $path, 'query' : $query }
-          )
-      )
+      data:xlsx-to-trci($storeRecord, $path, $query)
   };
 
 declare function data:getResource( $uri, $funct, $params ){
