@@ -6,6 +6,11 @@ import module namespace c = 'http://iro37.ru/trac/core/utilits/config'
 import module namespace f2 = 'http://garpix.com/semantik/app/fuseki2' 
   at '../../../lib/client.fuseki2.xqm';
 
+(: тип датасета :)
+declare function rdf:dbType(){
+  'tdb2'
+};
+
 (: генерирует URI датасета :)
 declare function rdf:datasetName(){
   c:param('authDomain') || ':' || session:get('userID')
@@ -43,7 +48,7 @@ function rdf:datasetCreate(){
         web:create-url(
           rdf:datasetEndpoint(),
           map{
-            'dbType':'tdb',
+            'dbType':rdf:dbType(),
             'dbName':rdf:datasetName(),
             'state':'active'
           }

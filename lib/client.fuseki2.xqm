@@ -31,7 +31,7 @@ function fuseki2:uploadGraph(
       </http:request>   
   let $response := http:send-request($request, $url)
   return
-     $response[2]/@status/text()
+     $response[1]/@status/data()
 };
 
 declare
