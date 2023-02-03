@@ -37,8 +37,11 @@ function graph:uploadGraph($graphURI as xs:string, $file as map(*)){
             parse-xml(
               convert:binary-to-string(map:get($file, map:keys($file)[1]))
             )/child::* 
+          let $result := fuseki2:uploadGraph($rdf, $graphURI, $datasetEndpoint)
           return
-            fuseki2:uploadGraph($rdf, $graphURI, $datasetEndpoint)
+            if($result="201")
+            then(<rest:response><http:response status="201"/></rest:response>)
+            else(<rest:response><http:response status="400"/></rest:response>)
         )
         else(
           <rest:response><http:response status="409"/></rest:response>, 
