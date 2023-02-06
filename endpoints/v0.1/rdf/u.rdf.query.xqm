@@ -1,53 +1,62 @@
-module namespace rdf = 'http://iro37.ru/trac/api/v0.1/u/rdf/graph/post';
-  
+module namespace rdf = 'http://iro37.ru/trac/api/v0.1/u/rdf/query';
+
+import module namespace graph = 'http://iro37.ru/trac/api/v0.1/u/rdf/graph'
+  at 'u.rdf.graph.xqm';
+
 declare 
   %rest:GET
-  %output:method('xml')
-  %rest:query-param("query","{$query}")
+  %rest:query-param("query","{$query}", "")
   %rest:query-param("output","{$output}", 'json')
   %rest:path("/trac/api/v0.1/u/rdf/query")
   %private
-function rdf:trci-to-rdf(
-  $query, $output as xs:string
+function rdf:query(
+  $query as xs:string,
+  $output as xs:string
 )
 {
-  rdf:getData($query, $output)
-};
-
-declare function rdf:getData($q){rdf:getData($q, 'json')};
-
-declare function rdf:getData($q, $m){
-  let $e := 'http://ovz2.j40045666.px7zm.vps.myjino.ru:49408/portal.titul24.ru:'
-  let $u := session:get('userID')
-  return
-    rdf:getData($q, $m, $e, $u)
-};
-declare function rdf:getData($q, $m, $e, $u){
-  rdf:sendSPARQL($q, $m, $e || $u)
+    let $datasetEndpoint := graph:datasetEndpoint()
+    let $result := rdf:sendSPARQL($query, $output, $datasetEndpoint)
+    return
+      rdf:reponse($output, $result)
 };
 
 declare
-  %public
+  %private
+function rdf:reponse($output as xs:string, $result as xs:string)
+{
+  let $params :=
+    switch ($output)
+    case 'xml' return ['application/xml',  parse-xml($result)]
+    case 'json' return ['application/json', $result]
+    default return ['application/json', $result]
+  let $mime := $params?1 || "; charset=utf-8"
+  return
+   (
+      <rest:response>
+        <http:response status="200">
+          <http:header name="Content-Type" value="{$mime}"/>
+        </http:response>
+      </rest:response>,
+      $params?2
+    )
+};
+
+declare
+  %private
 function rdf:sendSPARQL(
   $query as xs:string,
-  $форматСериализацииДанных as xs:string,
+  $output as xs:string,
   $endPoint as xs:string
-) as element()*{
+) as xs:string
+{
   let $request :=
     web:create-url(
       $endPoint,
       map{
         "query": $query,
-        "output" : $форматСериализацииДанных
+        "output" : $output
       }
     )  
   return
-    if($query!="")
-    then(
-      switch ($форматСериализацииДанных)
-      case 'xml' return fetch:xml($request)//*:result
-      case 'json' return json:doc($request)//results//_
-      default return fetch:xml($request)//*:result
-    )
-    else()
+    fetch:text($request)
 };

@@ -11,6 +11,29 @@ import module namespace resource = 'http://iro37.ru/trac/api/v0.1/u/data/stores'
 
 (: преобразует TRCI в RDF/XML - публичный метод :)
 declare 
+  %rest:GET
+  %output:method('xml')
+  %rest:query-param('path', '{$path}')
+  %rest:query-param('schema', '{$schema}')
+  %rest:path('/trac/api/v0.1/u/rdf/stores/{$storeID}')
+function rdf:get(
+  $path as xs:string,
+  $schema as xs:string,
+  $storeID as xs:string
+) as element(Q{http://www.w3.org/1999/02/22-rdf-syntax-ns#}RDF)*
+{
+   let $trci := resource:get($path, '.', $storeID, ())//table[1]
+   let $rdf :=
+     rdf:trci-to-rdf(
+       convert:string-to-base64(serialize($trci)),
+       $schema
+     )
+   return
+     $rdf 
+};
+
+(: преобразует TRCI в RDF/XML - публичный метод :)
+declare 
   %rest:POST
   %output:method('xml')
   %rest:form-param("trci","{$trci}")
@@ -54,14 +77,8 @@ function rdf:upload(
   $storeID as xs:string
 )
 {
-   let $trci := resource:get($path, '.', $storeID, ())//table[1]
-   let $rdf :=
-     rdf:trci-to-rdf(
-       convert:string-to-base64(serialize($trci)),
-       $schema
-     )
-   let $graphURI :=
-     graph:datasetName()||'/store/'||$storeID||'/'||$path
+   let $rdf := rdf:get($path, $schema, $storeID)
+   let $graphURI := graph:datasetName()||'/store/'||$storeID||'/'||$path
    return
      graph:uploadGraph(
        $graphURI,
