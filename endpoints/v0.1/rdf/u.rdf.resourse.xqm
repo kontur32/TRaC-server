@@ -68,8 +68,8 @@ function rdf:trci-to-rdf(
 declare
   %public
   %rest:POST
-  %rest:form-param('path', '{$path}')
-  %rest:form-param('schema', '{$schema}')
+  %rest:query-param('path', '{$path}')
+  %rest:query-param('schema', '{$schema}')
   %rest:path('/trac/api/v0.1/u/rdf/stores/{$storeID}')
 function rdf:upload(
   $path as xs:string*,
@@ -90,8 +90,8 @@ function rdf:upload(
 declare
   %public
   %rest:PUT
-  %rest:form-param('path', '{$path}')
-  %rest:form-param('schema', '{$schema}')
+  %rest:query-param('path', '{$path}')
+  %rest:query-param('schema', '{$schema}')
   %rest:path('/trac/api/v0.1/u/rdf/stores/{$storeID}')
 function rdf:update(
   $path as xs:string*,
@@ -105,8 +105,7 @@ function rdf:update(
        convert:string-to-base64(serialize($trci)),
        $schema
      )
-   let $graphURI :=
-     graph:datasetName()||'/store/'||$storeID||'/'||$path
+   let $graphURI := graph:datasetName()||'/store/'||$storeID||'/'||$path
    return
      graph:updateGraph(
        $graphURI,
@@ -118,7 +117,7 @@ function rdf:update(
 declare
   %public
   %rest:DELETE
-  %rest:form-param('path', '{$path}')
+  %rest:query-param('path', '{$path}')
   %rest:path('/trac/api/v0.1/u/rdf/stores/{$storeID}')
 function rdf:delete(
   $path as xs:string*,

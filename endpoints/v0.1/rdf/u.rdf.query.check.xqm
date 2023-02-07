@@ -10,15 +10,25 @@ function check:rdf.query(
   $query as xs:string*,
   $output as xs:string*
 ) {
-    if(empty($query))
+    if(empty($query) or $query="")
     then(
-      <rest:response><http:response status="400"/></rest:response>,
-     'Не указан обязательный параметр query'
+      <rest:response>
+        <http:response status="400">
+          <http:header name="Content-Language" value="ru"/>
+          <http:header name="Content-Type" value="text/plain; charset=utf-8"/>
+        </http:response>
+      </rest:response>,
+     'Не указан обязательный параметр query или его значение пустое'
     )
     else(
       if(not(empty($output)) and not($output = ('json', 'xml')))
       then(
-        <rest:response><http:response status="400"/></rest:response>,
+        <rest:response>
+          <http:response status="400">
+            <http:header name="Content-Language" value="ru"/>
+            <http:header name="Content-Type" value="text/plain; charset=utf-8"/>
+          </http:response>
+        </rest:response>,
        'Параметр output может быть: json (по умолчанию) или xml'
       )
     )
