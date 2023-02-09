@@ -25,7 +25,7 @@ declare
   %rest:form-param("file","{$file}")
   %rest:path("/trac/api/v0.1/u/rdf/graph")
   %public
-function graph:uploadGraph($graphURI as xs:string, $file as map(*)){
+function graph:uploadGraph($graphURI as xs:string, $file){
     if(r:datasetExists())  
     then(
       if($graphURI != "")
@@ -33,10 +33,7 @@ function graph:uploadGraph($graphURI as xs:string, $file as map(*)){
         if(not(graph:isExists($graphURI)))
         then(
           let $datasetEndpoint := graph:datasetEndpoint()
-          let $rdf := 
-            parse-xml(
-              convert:binary-to-string(map:get($file, map:keys($file)[1]))
-            )/child::* 
+          let $rdf := graph:rdf($file)
           let $result := fuseki2:uploadGraph($rdf, $graphURI, $datasetEndpoint)
           return
             if($result="201")
@@ -44,8 +41,9 @@ function graph:uploadGraph($graphURI as xs:string, $file as map(*)){
             else(<rest:response><http:response status="400"/></rest:response>)
         )
         else(
-          <rest:response><http:response status="409"/></rest:response>, 
+          <rest:response><http:response status="409"/></rest:response>,
           'Граф <' || $graphURI || '> существет. Используйте метод PUT'
+          
         )
       )
       else(
@@ -66,16 +64,13 @@ declare
   %rest:form-param("file","{$file}")
   %rest:path("/trac/api/v0.1/u/rdf/graph")
   %public
-function graph:updateGraph($graphURI as xs:string, $file as map(*)){
+function graph:updateGraph($graphURI as xs:string, $file){
     if(r:datasetExists())  
     then(
       if(graph:isExists($graphURI))
       then(
         let $datasetEndpoint := graph:datasetEndpoint()
-        let $rdf := 
-          parse-xml(
-            convert:binary-to-string(map:get($file, map:keys($file)[1]))
-          )/child::* 
+        let $rdf := graph:rdf($file)
         let $result :=
           (
             fuseki2:deleteGraph($graphURI, $datasetEndpoint),
@@ -98,6 +93,22 @@ function graph:updateGraph($graphURI as xs:string, $file as map(*)){
     )
 };
 
+(: конвертирует полученный файл в RDF :)
+declare 
+  %private
+function graph:rdf(
+  $file
+) as element(Q{http://www.w3.org/1999/02/22-rdf-syntax-ns#}RDF)*
+{
+  let $fileRaw :=
+    if($file instance of map(*))
+    then(convert:binary-to-string(map:get($file, map:keys($file)[1])))
+    else($file)
+  return 
+    parse-xml($fileRaw)/child::* 
+};
+
+
 (:  проверяет наличие графа в хранилище :)
 declare function graph:isExists($graphURI as xs:string)
 {
@@ -114,7 +125,7 @@ declare
   %rest:GET
   %output:method('text')
   %rest:query-param("graphURI", "{$graphURI}", "")
-  %rest:path("/trac/api/v0.1/u/rdf/graph/exists")
+  %rest:path("/trac/api/v0.1/u/rdf/graph")
   %private
 function graph:graphExists($graphURI as xs:string)
 {
