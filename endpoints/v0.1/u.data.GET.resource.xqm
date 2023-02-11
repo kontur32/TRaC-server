@@ -159,22 +159,20 @@ declare function data:getResource( $uri, $funct, $params ){
 
 declare
   %public
-  %rest:method( 'GET' )
-  %rest:query-param( 'path', '{ $path }' )
-  %rest:query-param( 'xq', '{ $query }' )
-  %rest:path( '/trac/api/v0.1/u/data/stores/{ $storeID }/file' )
+  %rest:method('GET')
+  %rest:query-param( 'path', '{$path}' )
+  %rest:path( '/trac/api/v0.1/u/data/stores/{$storeID}/file' )
 function
-  data:getFileRaw(
+  data:getFileRaw_publish(
     $path as xs:string*,
-    $query as xs:string*,
     $storeID
   )
   {
     let $storeRecord := 
       читатьБД:данныеПользователя(
-        session:get( 'userID' ), 1, 0,'.',
-        map{ 'имяПеременойПараметров' : 'params', 'значенияПараметров' : map{}  }
-      )?шаблоны[ row[ ends-with( @id, $storeID ) ] ]
+        session:get('userID'), 1, 0,'.',
+        map{'имяПеременойПараметров' : 'params', 'значенияПараметров' : map{}}
+      )?шаблоны[row[ends-with( @id, $storeID )]]
     return
        data:getFileRaw( $storeRecord, $path ) 
   };
@@ -188,7 +186,7 @@ declare function data:getFileRaw(
   $storeRecord as element(table),
   $path as xs:string*
 )
-  as xs:base64Binary
+  
 {
   switch ( $storeRecord/row/@type/data() )
   case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеЯндексДиск'
