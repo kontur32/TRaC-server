@@ -37,7 +37,7 @@ function yandex:sendRequest($fullPath, $token){
    let $response :=
       if($href)  
       then(fetch:binary($href))
-      else(<err:RES01>Ресурс не найден</err:RES01>) 
+      else() 
      
    return
      $response
