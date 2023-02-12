@@ -174,7 +174,14 @@ function
         map{'имяПеременойПараметров' : 'params', 'значенияПараметров' : map{}}
       )?шаблоны[row[ends-with( @id, $storeID )]]
     return
-       data:getFileRaw( $storeRecord, $path ) 
+     (
+      <rest:response>
+        <http:response status="200">
+          <http:header name="Content-type" value="application/octet-stream"/>
+        </http:response>
+      </rest:response>,
+      data:getFileRaw( $storeRecord, $path )
+     ) 
   };
 
 
@@ -186,7 +193,6 @@ declare function data:getFileRaw(
   $storeRecord as element(table),
   $path as xs:string*
 )
-  
 {
   switch ( $storeRecord/row/@type/data() )
   case 'http://dbx.iro37.ru/zapolnititul/Онтология/хранилищеЯндексДиск'
@@ -208,22 +214,22 @@ declare function data:getFileRaw(
   
 declare function data:trci( $rawData ){
   let $request := 
-          <http:request method='POST'>
-              <http:header name="Content-type" value="multipart/form-data; boundary=----7MA4YWxkTrZu0gW"/>
-              <http:multipart media-type = "multipart/form-data" >
-                  <http:header name='Content-Disposition' value='form-data; name="data"'/>
-                  <http:body media-type = "application/octet-stream">
-                     { $rawData }
-                  </http:body>
-              </http:multipart> 
-            </http:request>
-      let $response := 
-          http:send-request(
-              $request,
-              'http://' || request:hostname() || ':' || request:port() || "/ooxml/api/v1.1/xlsx/parse/workbook"
-          )
-      return
-       $response[ 2 ]
+    <http:request method='POST'>
+        <http:header name="Content-type" value="multipart/form-data; boundary=----7MA4YWxkTrZu0gW"/>
+        <http:multipart media-type = "multipart/form-data" >
+            <http:header name='Content-Disposition' value='form-data; name="data"'/>
+            <http:body media-type = "application/octet-stream">
+               { $rawData }
+            </http:body>
+        </http:multipart> 
+      </http:request>
+  let $response := 
+      http:send-request(
+          $request,
+          'http://' || request:hostname() || ':' || request:port() || "/ooxml/api/v1.1/xlsx/parse/workbook"
+      )
+  return
+   $response[ 2 ]
 };
 
 (: возвращает данные, запрошенные пользователем из базы :)
