@@ -17,8 +17,29 @@ declare function yandex:getResource($storeRecord, $path){
 
 declare
   %public
-function yandex:sendRequest($fullPath, $token){
-  let $href :=
+function yandex:resourceList($fullPath, $token){  
+  let $fieldsName :=
+    ('name','type','created','modified','sha256','size','mime__type','media__type')
+  let $list := yandex:resources($fullPath, $token)  
+  let $res := 
+    for $i in $list//_  
+    return
+      <resource type="object">{
+        for $f in $fieldsName
+        return
+          $i/child::*[name()=$f]
+      }</resource>   
+  return
+    <resources type="object">
+      <count type="number">{count($res)}</count>
+      <fullPath>{$fullPath}</fullPath>
+      {$res}
+    </resources>
+};  
+
+declare
+  %public
+function yandex:resources($fullPath, $token){
     http:send-request(
        <http:request method='GET'>
          <http:header name="Authorization" value="{'OAuth ' || $token}"/>
@@ -32,14 +53,19 @@ function yandex:sendRequest($fullPath, $token){
            'limit' : '50'
          }
        )
-    )[2]/json/file/text()
+    )[2]
+};
 
-   let $response :=
+declare
+  %public
+function yandex:sendRequest($fullPath, $token){
+  let $href :=
+    yandex:resources($fullPath, $token)/json/file/text()
+  let $response :=
       if($href)  
       then(fetch:binary($href))
-      else() 
-     
-   return
+      else()      
+  return
      $response
 };
 

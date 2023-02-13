@@ -1,4 +1,4 @@
-module namespace data = 'http://iro37.ru/trac/api/v0.1/u/data/stores/nextCloudOAuth2s';
+module namespace data = 'http://iro37.ru/trac/api/v0.1/u/data/stores/nextCloudOAuth2';
 
 import module namespace config = 'http://iro37.ru/trac/core/utilits/config' 
   at '../../core/utilits/config.xqm';
