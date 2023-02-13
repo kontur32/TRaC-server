@@ -17,7 +17,14 @@ declare function yandex:getResource($storeRecord, $path){
 
 declare
   %public
-function yandex:resourceList($fullPath, $token){  
+function yandex:resourceList($storeRecord, $path){  
+   let $token := 
+      $storeRecord/row/cell[@id="http://dbx.iro37.ru/zapolnititul/сущности/токенДоступа" ]/text()
+    let $storePath :=
+      $storeRecord/row/cell[@id="http://dbx.iro37.ru/zapolnititul/признаки/локальныйПуть"]/text()
+    
+    let $path :=  starts-with($path, '/') ?? $path !! '/' || $path 
+    let $fullPath := $storePath || $path
   let $fieldsName :=
     ('name','type','created','modified','sha256','size','mime__type','media__type')
   let $list := yandex:resources($fullPath, $token)  

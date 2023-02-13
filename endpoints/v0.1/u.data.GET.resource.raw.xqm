@@ -18,6 +18,46 @@ import module namespace sch = "http://iro37.ru/trac/api/v0.1/u/data/stores/model
 import module namespace ncOAuth2 = 'http://iro37.ru/trac/api/v0.1/u/data/stores/nextCloudOAuth2'
   at 'p.data.GET.resource.oauth-token.xqm';
 
+(: возвращает список ресурсов из хранилища по указанному пути :)
+declare
+  %public
+  %rest:method('GET')
+  %rest:query-param('output', '{$output}', 'xml')
+  %rest:query-param('path', '{$path}')
+  %rest:path('/trac/api/v0.1/u/data/stores/{$storeID}/resources')
+function
+dataRaw:resourcesList(
+  $path as xs:string*,
+  $output as xs:string,
+  $storeID as xs:string
+)
+{
+  let $storeRecord := dataRaw:storeRecord($storeID)
+  let $list := yandex:resourceList($storeRecord, $path)
+  let $response :=
+    switch ($output)
+    case 'json'
+      return
+        json:serialize(
+          <json type="object">
+            {$list}
+          </json>
+        )
+    case 'xml'
+      return
+        $list
+    default return $list
+  return
+   (
+    <rest:response>
+      <http:response status="200">
+        <http:header name="Content-type" value='{"application/" || $output}'/>
+      </http:response>
+    </rest:response>,
+    $response 
+   )
+};
+
 declare
   %public
   %rest:method('GET')
@@ -29,11 +69,7 @@ dataRaw:getFileRaw_publish(
   $storeID as xs:string
 )
 {
-  let $storeRecord := 
-    читатьБД:данныеПользователя(
-      session:get('userID'), 1, 0,'.',
-      map{'имяПеременойПараметров' : 'params', 'значенияПараметров' : map{}}
-    )?шаблоны[row[ends-with( @id, $storeID )]]
+  let $storeRecord := dataRaw:storeRecord($storeID )
   return
    (
     <rest:response>
@@ -41,13 +77,24 @@ dataRaw:getFileRaw_publish(
         <http:header name="Content-type" value="application/octet-stream"/>
       </http:response>
     </rest:response>,
-    dataRaw:getFileRaw( $storeRecord, $path )
+    dataRaw:getFileRaw($storeRecord, $path)
    ) 
 };
 
-(:
-  возвращает файл в формате base64
-:)
+
+(: запись с данными хранилища из базы  :)
+declare function dataRaw:storeRecord(
+  $storeID as xs:string
+) as element(table)*
+{
+  читатьБД:данныеПользователя(
+    session:get('userID'), 1, 0,'.',
+    map{'имяПеременойПараметров' : 'params', 'значенияПараметров' : map{}}
+  )?шаблоны[row[ends-with( @id, $storeID )]]
+};
+
+
+(: возвращает файл в формате base64 :)
 declare function dataRaw:getFileRaw(
   $storeRecord as element(table),
   $path as xs:string*
