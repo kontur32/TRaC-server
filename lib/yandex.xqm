@@ -26,7 +26,7 @@ function yandex:resourceList($storeRecord, $path){
     let $path :=  starts-with($path, '/') ?? $path !! '/' || $path 
     let $fullPath := $storePath || $path
   let $fieldsName :=
-    ('name','type','created','modified','sha256','size','mime__type','media__type')
+    ('name','type','created','modified','sha256','size','mime__type','media__type', 'file')
   let $list := yandex:resources($fullPath, $token)  
   let $res := 
     for $i in $list//_  
