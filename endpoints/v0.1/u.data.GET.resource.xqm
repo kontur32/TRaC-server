@@ -92,7 +92,7 @@ declare
 function data:trci(
   $rawData as xs:base64Binary,
   $column-direction as xs:string*
-) as element(file)
+)
 {
   let $endppoint :=
     if(config:param('ooxmlHost'))
@@ -115,6 +115,6 @@ function data:trci(
         $endppoint || "/ooxml/api/v1.1/xlsx/parse/workbook"
       )
   return
-   $response[2]/file
+   $response[2]
 };
 
