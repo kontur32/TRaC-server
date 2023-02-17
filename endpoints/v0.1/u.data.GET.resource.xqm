@@ -19,14 +19,16 @@ declare variable
 :)
 declare
   %public
-  %rest:method('GET')
+  %rest:GET
   %rest:query-param('path', '{$path}')
+  %rest:query-param("column-direction", "{$column-direction}")
   %rest:query-param('xq', '{$query}', '.')
   %rest:query-param("access_token", "{$access_token}", "")
   %rest:path('/trac/api/v0.1/u/data/stores/{$storeID}')
 function
 data:get(
   $path as xs:string*,
+  $column-direction as xs:string*,
   $query as xs:string*,
   $storeID,
   $access_token as xs:string*
@@ -39,27 +41,7 @@ data:get(
     )?шаблоны  
   let $storeRecord := $данныеПользователя[row[ends-with(@id, $storeID)]]
   return
-    data:xlsx-to-trci($storeRecord, $path, $query)
-};
-  
-declare function data:trci($rawData){
-  let $request := 
-    <http:request method='POST'>
-        <http:header name="Content-type" value="multipart/form-data; boundary=----7MA4YWxkTrZu0gW"/>
-        <http:multipart media-type = "multipart/form-data" >
-            <http:header name='Content-Disposition' value='form-data; name="data"'/>
-            <http:body media-type = "application/octet-stream">
-               {$rawData}
-            </http:body>
-        </http:multipart> 
-      </http:request>
-  let $response := 
-      http:send-request(
-        $request,
-        'http://' || request:hostname() || ':' || request:port() || "/ooxml/api/v1.1/xlsx/parse/workbook"
-      )
-  return
-   $response[2]
+    data:xlsx-to-trci($storeRecord, $path, $column-direction, $query)
 };
 
 (: возвращает данные, запрошенные пользователем из базы :)
@@ -68,6 +50,7 @@ declare
 function data:xlsx-to-trci(
   $storeRecord as element(table),
   $path as xs:string,
+  $column-direction as xs:string*,
   $query as xs:string
 ){
   let $rawData := dataRaw:getFileRaw($storeRecord, $path)
@@ -90,7 +73,48 @@ function data:xlsx-to-trci(
      return
        xquery:eval(
         $xq,
-        map{ '' : data:trci($rawData),  'params' : $params },
-        map{ 'permission' : 'none' }
+        map{'' : data:trci($rawData, $column-direction),  'params' : $params},
+        map{'permission' : 'none'}
       )
 };
+
+declare
+  %public
+function data:trci(
+  $rawData as xs:base64Binary
+) as element(file)
+{
+   data:trci($rawData, ())
+};
+
+declare
+  %public
+function data:trci(
+  $rawData as xs:base64Binary,
+  $column-direction as xs:string*
+) as element(file)
+{
+  let $endppoint :=
+    if(config:param('ooxmlHost'))
+    then(config:param('ooxmlHost'))
+    else('http://' || request:hostname() || ':' || request:port())
+  
+  let $request := 
+    <http:request method='POST'>
+      <http:header name="Content-type" value="multipart/form-data; boundary=----7MA4YWxkTrZu0gW"/>
+      <http:multipart media-type = "multipart/form-data" >
+        <http:header name='Content-Disposition' value='form-data; name="data"'/>
+        <http:body media-type = "application/octet-stream">{$rawData}</http:body>
+        <http:header name='Content-Disposition' value='form-data; name="column-direction"'/>
+        <http:body media-type = "text/plain">{$column-direction}</http:body>
+      </http:multipart> 
+      </http:request>
+  let $response := 
+      http:send-request(
+        $request,
+        $endppoint || "/ooxml/api/v1.1/xlsx/parse/workbook"
+      )
+  return
+   $response[2]/file
+};
+

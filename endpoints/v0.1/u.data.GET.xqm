@@ -10,17 +10,16 @@ import module namespace store = 'http://iro37.ru/trac/api/v0.1/u/data/stores'
   at 'u.data.GET.resource.xqm';
 
 declare variable 
-  $data:зарезервированныеПараметрsЗапроса := 
-    ( 'access_token', 'xq', 'starts', 'limit' );
+  $data:зарезервированныеПараметрsЗапроса := ('access_token', 'xq', 'starts', 'limit');
 
 declare
   %public
-  %rest:method( 'GET' )
-  %rest:query-param( 'starts', '{ $starts }' )
-  %rest:query-param( 'limit', '{ $limit }' )
-  %rest:query-param( 'xq', '{ $query }' )
-  %rest:query-param( "access_token", "{ $access_token }", "" )
-  %rest:path( '/trac/api/v0.1/u/data' )
+  %rest:GET
+  %rest:query-param('starts', '{ $starts }')
+  %rest:query-param('limit', '{ $limit }')
+  %rest:query-param('xq', '{ $query }')
+  %rest:query-param("access_token", "{ $access_token }", "")
+  %rest:path('/trac/api/v0.1/u/data')
 function
   data:get(
     $starts as xs:string*,
@@ -53,7 +52,7 @@ function
           where not( $i = $data:зарезервированныеПараметрsЗапроса )
           return map{ $i : request:parameter( $i ) },
           map{
-            '_api' : map{ 'getTrci' : function( $s, $p, $q ){ store:xlsx-to-trci( $s, $p, $q ) } }
+            '_api' : map{ 'getTrci' : function($s, $p, $q){store:xlsx-to-trci($s, $p, '', $q)}}
           }
         )
       )

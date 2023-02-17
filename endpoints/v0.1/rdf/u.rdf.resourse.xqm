@@ -22,7 +22,8 @@ function rdf:get(
   $storeID as xs:string
 ) as element(Q{http://www.w3.org/1999/02/22-rdf-syntax-ns#}RDF)*
 {
-   let $trci := resource:get($path, '.', $storeID, ())//table[1]
+   let $direction := ''
+   let $trci := resource:get($path, $direction, '.', $storeID, ())//table[1]
    let $rdf :=
      rdf:trci-to-rdf(
        convert:string-to-base64(serialize($trci)),
@@ -99,7 +100,8 @@ function rdf:update(
   $storeID as xs:string
 )
 {
-   let $trci := resource:get($path, '.', $storeID, ())//table[1]
+   let $direction := ''
+   let $trci := resource:get($path, $direction, '.', $storeID, ())//table[1]
    let $rdf :=
      rdf:trci-to-rdf(
        convert:string-to-base64(serialize($trci)),

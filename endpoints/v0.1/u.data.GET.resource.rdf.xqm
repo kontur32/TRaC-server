@@ -52,9 +52,10 @@ function
     $access_token as xs:string*
   )
   {
+    let $direction := ''
     let $pages := tokenize($page, ';')
     let $data :=
-      data:get($path, $query, $storeID, $access_token)
+      data:get($path, $direction, $query, $storeID, $access_token)
       /file/table[
         if(empty($pages))then(1)else(@label=$pages)
       ]
@@ -87,8 +88,9 @@ function
     $access_token as xs:string*
   )
   {
+    let $direction := ''
     let $data :=
-      data:get($path, $query, $storeID, $access_token)
+      data:get($path, $direction, $query, $storeID, $access_token)
       /file/table[if($page!='')then(@label=$page)else(1)]
     let $schema := sch:model(fetch:xml($schema)/csv)
     return
